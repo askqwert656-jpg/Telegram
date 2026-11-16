@@ -4569,6 +4569,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 presentFragment(new StarsIntroActivity());
             } else if (position == tonRow) {
                 presentFragment(new TONIntroActivity());
+            } else if (position == premiumGiftingRow) {
+                UserSelectorBottomSheet.open(0, BirthdayController.getInstance(currentAccount).getState());
             } else if (position == botPermissionLocation) {
                 if (botLocation != null) {
                     botLocation.setGranted(!botLocation.granted(), () -> {
@@ -11016,7 +11018,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (ApplicationLoader.isBetaBuild() || ApplicationLoader.isStandaloneBuild() || ApplicationLoader.isHuaweiStoreBuild() || (StarsController.getInstance(currentAccount, true).balanceAvailable() && (StarsController.getInstance(currentAccount, true).hasTransactions() || StarsController.getInstance(currentAccount, true).getBalance().positive()))) {
                     tonRow = rowCount++;
                 }
-                if (premiumRow >= 0 || starsRow >= 0 || tonRow >= 0 || businessRow >= 0) {
+                if (!getMessagesController().premiumPurchaseBlocked()) {
+                    premiumGiftingRow = rowCount++;
+                }
+                if (premiumRow >= 0 || starsRow >= 0 || tonRow >= 0 || businessRow >= 0 || premiumGiftingRow >= 0) {
                     premiumSectionsRow = rowCount++;
                 }
                 helpHeaderRow = rowCount++;
