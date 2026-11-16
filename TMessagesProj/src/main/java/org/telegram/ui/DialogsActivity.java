@@ -239,7 +239,6 @@ import org.telegram.ui.Components.MediaActivity;
 import org.telegram.ui.Components.NumberTextView;
 import org.telegram.ui.Components.PacmanAnimation;
 import org.telegram.ui.Components.Premium.LimitReachedBottomSheet;
-import org.telegram.ui.Components.Premium.PremiumFeatureBottomSheet;
 import org.telegram.ui.Components.Premium.boosts.UserSelectorBottomSheet;
 import org.telegram.ui.Components.ProxyDrawable;
 import org.telegram.ui.Components.PullForegroundDrawable;
@@ -6104,59 +6103,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     .setDuration(Bulletin.DURATION_PROLONG)
                     .show();
             });
-        } else if (false && isPremiumChristmasHintVisible()) {
-            dialogsHintCellVisible = true;
-            dialogsHintCell.setOnClickListener(v -> UserSelectorBottomSheet.open());
-            dialogsHintCell.setText(Emoji.replaceEmoji(AndroidUtilities.replaceSingleTag(
-                    LocaleController.getString(R.string.GiftPremiumEventAdsTitle),
-                    Theme.key_windowBackgroundWhiteValueText,
-                    AndroidUtilities.REPLACING_TAG_TYPE_LINKBOLD,
-                    null
-            ), null, false), LocaleController.formatString(R.string.BoostingPremiumChristmasSubTitle));
-            dialogsHintCell.setOnCloseListener(v -> {
-                MessagesController.getInstance(currentAccount).removeSuggestion(0, "PREMIUM_CHRISTMAS");
-                updateDialogsHint();
-                BulletinFactory.of(this)
-                        .createSimpleBulletin(R.raw.gift, LocaleController.getString(R.string.BoostingPremiumChristmasToast), 4)
-                        .setDuration(Bulletin.DURATION_PROLONG)
-                        .show();
-            });
-        } else if (false && isPremiumRestoreHintVisible()) {
-            dialogsHintCellVisible = true;
-            dialogsHintCell.setOnClickListener(v -> {
-                presentFragment(new PremiumPreviewFragment("dialogs_hint").setSelectAnnualByDefault());
-                AndroidUtilities.runOnUIThread(() -> {
-                    MessagesController.getInstance(currentAccount).removeSuggestion(0, "PREMIUM_RESTORE");
-                    updateDialogsHint();
-                }, 250);
-            });
-            dialogsHintCell.setText(
-                    AndroidUtilities.replaceSingleTag(
-                            LocaleController.formatString(R.string.RestorePremiumHintTitle, MediaDataController.getInstance(currentAccount).getPremiumHintAnnualDiscount(false)),
-                            Theme.key_windowBackgroundWhiteValueText,
-                            AndroidUtilities.REPLACING_TAG_TYPE_LINKBOLD,
-                            null
-                    ),
-                    LocaleController.getString(R.string.RestorePremiumHintMessage)
-            );
-        } else if (false && isPremiumHintVisible()) {
-            dialogsHintCellVisible = true;
-            dialogsHintCell.setOnClickListener(v -> {
-                presentFragment(new PremiumPreviewFragment("dialogs_hint").setSelectAnnualByDefault());
-                AndroidUtilities.runOnUIThread(() -> {
-                    MessagesController.getInstance(currentAccount).removeSuggestion(0, isPremiumHintUpgrade ? "PREMIUM_UPGRADE" : "PREMIUM_ANNUAL");
-                    updateDialogsHint();
-                }, 250);
-            });
-            dialogsHintCell.setText(
-                    AndroidUtilities.replaceSingleTag(
-                            LocaleController.formatString(isPremiumHintUpgrade ? R.string.SaveOnAnnualPremiumTitle : R.string.UpgradePremiumTitle, MediaDataController.getInstance(currentAccount).getPremiumHintAnnualDiscount(false)),
-                            Theme.key_windowBackgroundWhiteValueText,
-                            AndroidUtilities.REPLACING_TAG_TYPE_LINKBOLD,
-                            null
-                    ),
-                    LocaleController.getString(isPremiumHintUpgrade ? R.string.UpgradePremiumMessage : R.string.SaveOnAnnualPremiumMessage)
-            );
         } else if (isCacheHintVisible()) {
             dialogsHintCellVisible = true;
             dialogsHintCell.setOnClickListener(v -> {
