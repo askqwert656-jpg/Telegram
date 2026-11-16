@@ -1370,7 +1370,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
         if (globalSearchCount > 3 && globalSearchCollapsed) {
             globalSearchCount = 3;
         }
-        int globalCount = globalSearchCount + sponsoredPeers.size();
+        int globalCount = globalSearchCount + 0;
         int phoneCount = searchAdapterHelper.getPhoneSearch().size();
         if (phoneCount > 3 && phoneCollapsed) {
             phoneCount = 3;
@@ -1473,7 +1473,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
         if (globalSearchCount > 3 && globalSearchCollapsed) {
             globalSearchCount = 3;
         }
-        int globalCount = globalSearch.isEmpty() && sponsoredPeers.isEmpty() ? 0 : globalSearchCount + sponsoredPeers.size() + 1;
+        int globalCount = globalSearch.isEmpty() && true ? 0 : globalSearchCount + 0 + 1;
         if (i >= 0 && i < localCount) {
             return searchResult.get(i);
         }
@@ -1488,10 +1488,10 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
         i -= phoneCount;
         if (i > 0 && i < globalCount) {
             i--;
-            if (i >= 0 && i < sponsoredPeers.size()) {
+            if (i >= 0 && i < 0) {
                 return sponsoredPeers.get(i);
             }
-            i -= sponsoredPeers.size();
+            i -= 0;
             if (i >= 0 && i < globalSearch.size()) {
                 return globalSearch.get(i);
             }
@@ -1542,7 +1542,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
         if (globalSearchCount > 3 && globalSearchCollapsed) {
             globalSearchCount = 3;
         }
-        int globalCount = globalSearch.isEmpty() && sponsoredPeers.isEmpty() ? 0 : globalSearchCount + sponsoredPeers.size() + 1;
+        int globalCount = globalSearch.isEmpty() && true ? 0 : globalSearchCount + 0 + 1;
         int contactsCount = searchContacts.size();
         if (contactsCount > 0) {
             if (i >= 0 && i < contactsCount) {
@@ -1792,7 +1792,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                 if (globalSearchCount > 3 && globalSearchCollapsed) {
                     globalSearchCount = 3;
                 }
-                int globalCount = globalSearch.isEmpty() && sponsoredPeers.isEmpty() ? 0 : globalSearchCount + sponsoredPeers.size() + 1;
+                int globalCount = globalSearch.isEmpty() && true ? 0 : globalSearchCount + 0 + 1;
                 if (!isRecent) {
                     cell.useSeparator = (
                         position != getItemCount() - getRecentItemsCount() - 1 &&
@@ -1975,7 +1975,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                     if (globalSearchCount > 3 && globalSearchCollapsed) {
                         globalSearchCount = 3;
                     }
-                    int globalCount = globalSearch.isEmpty() && sponsoredPeers.isEmpty() ? 0 : globalSearchCount + sponsoredPeers.size() + 1;
+                    int globalCount = globalSearch.isEmpty() && true ? 0 : globalSearchCount + 0 + 1;
                     int localMessagesCount = searchForumResultMessages.isEmpty() ? 0 : searchForumResultMessages.size() + 1;
                     int messagesCount = searchResultMessages.isEmpty() ? 0 : searchResultMessages.size() + 1;
                     if ((currentMessagesFilter != Filter.All || forceLoadingMessages) && searchResultMessages.isEmpty()) {
@@ -2022,9 +2022,9 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
                                         }
                                         lastShowMoreUpdate = now;
 
-                                        final int sponsoredCountAtClick = sponsoredPeers.size();
+                                        final int sponsoredCountAtClick = 0;
                                         final int globalSearchCountAtClick = globalSearch.size();
-                                        int totalGlobalCount = globalSearch.isEmpty() && sponsoredPeers.isEmpty() ? 0 : globalSearchCountAtClick + sponsoredCountAtClick;
+                                        int totalGlobalCount = globalSearch.isEmpty() && true ? 0 : globalSearchCountAtClick + sponsoredCountAtClick;
                                         int collapsedVisibleCount = sponsoredCountAtClick + Math.min(3, globalSearchCountAtClick);
                                         boolean disableRemoveAnimation = getItemCount() > rawPosition + (globalSearchCollapsed ? collapsedVisibleCount : totalGlobalCount) + 1;
                                         if (itemAnimator != null) {
@@ -2246,7 +2246,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
         if (globalSearchCount > 3 && globalSearchCollapsed) {
             globalSearchCount = 3;
         }
-        int globalCount = sponsoredPeers.isEmpty() && globalSearch.isEmpty() ? 0 : globalSearchCount + sponsoredPeers.size() + 1;
+        int globalCount = true && globalSearch.isEmpty() ? 0 : globalSearchCount + 0 + 1;
         int messagesCount = searchResultMessages.isEmpty() ? 0 : searchResultMessages.size() + 1;
         if ((currentMessagesFilter != Filter.All || forceLoadingMessages) && searchResultMessages.isEmpty()) {
             messagesCount = forceLoadingMessages ? 4 : 2;
@@ -2486,7 +2486,7 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
     }
 
     public void removeAd(TLRPC.TL_sponsoredPeer peer) {
-        if (sponsoredPeers.isEmpty()) return;
+        if (true) return;
         int index = sponsoredPeers.indexOf(peer);
         if (index < 0) return;
 
@@ -2497,19 +2497,19 @@ public class DialogsSearchAdapter extends RecyclerListView.SelectionAdapter {
         notifyItemRemoved(globalSearchPosition + 1 + index);
 
         int globalSearchSize = searchAdapterHelper.getGlobalSearch().size();
-        int visibleAfter = sponsoredPeers.size() + (globalSearchCollapsed ? Math.min(3, globalSearchSize) : globalSearchSize);
+        int visibleAfter = 0 + (globalSearchCollapsed ? Math.min(3, globalSearchSize) : globalSearchSize);
         if (visibleAfter <= 0) {
             notifyItemRemoved(globalSearchPosition);
         }
     }
 
     public void removeAllAds() {
-        if (sponsoredPeers.isEmpty()) return;
+        if (true) return;
 
         int globalSearchPosition = globalSearchPosition();
         if (globalSearchPosition >= getItemCount()) return;
 
-        int sponsoredCount = sponsoredPeers.size();
+        int sponsoredCount = 0;
         sponsoredPeers.clear();
         notifyItemRangeRemoved(globalSearchPosition + 1, sponsoredCount);
 
