@@ -11803,62 +11803,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         showStatusSelect();
                     });
                 }
-                if (!user.self && getMessagesController().isPremiumUser(user)) {
-                    final SimpleTextView textView = nameTextView;
+                if (!user.self && getMessagesController().isPremiumUser(user) && user.emoji_status instanceof TLRPC.TL_emojiStatusCollectible) {
                     nameTextView.setRightDrawableOnClick(v -> {
-                        if (user.emoji_status instanceof TLRPC.TL_emojiStatusCollectible) {
-                            TLRPC.TL_emojiStatusCollectible status = (TLRPC.TL_emojiStatusCollectible) user.emoji_status;
-                            if (status != null) {
-                                Browser.openUrl(getContext(), "https://" + getMessagesController().linkPrefix + "/nft/" + status.slug);
-                            }
-                            return;
+                        TLRPC.TL_emojiStatusCollectible status = (TLRPC.TL_emojiStatusCollectible) user.emoji_status;
+                        if (status != null) {
+                            Browser.openUrl(getContext(), "https://" + getMessagesController().linkPrefix + "/nft/" + status.slug);
                         }
-                        PremiumPreviewBottomSheet premiumPreviewBottomSheet = new PremiumPreviewBottomSheet(ProfileActivity.this, currentAccount, user, resourcesProvider);
-                        int[] coords = new int[2];
-                        textView.getLocationOnScreen(coords);
-                        premiumPreviewBottomSheet.startEnterFromX = textView.rightDrawableX;
-                        premiumPreviewBottomSheet.startEnterFromY = textView.rightDrawableY;
-                        premiumPreviewBottomSheet.startEnterFromScale = textView.getScaleX();
-                        premiumPreviewBottomSheet.startEnterFromX1 = textView.getLeft();
-                        premiumPreviewBottomSheet.startEnterFromY1 = textView.getTop();
-                        premiumPreviewBottomSheet.startEnterFromView = textView;
-                        if (textView.getRightDrawable() == emojiStatusDrawable && emojiStatusDrawable != null && emojiStatusDrawable.getDrawable() instanceof AnimatedEmojiDrawable) {
-                            premiumPreviewBottomSheet.startEnterFromScale *= 0.98f;
-                            TLRPC.Document document = ((AnimatedEmojiDrawable) emojiStatusDrawable.getDrawable()).getDocument();
-                            if (document != null) {
-                                BackupImageView icon = new BackupImageView(getContext());
-                                String filter = "160_160";
-                                ImageLocation mediaLocation;
-                                String mediaFilter;
-                                SvgHelper.SvgDrawable thumbDrawable = DocumentObject.getSvgThumb(document.thumbs, Theme.key_windowBackgroundWhiteGrayIcon, 0.2f);
-                                TLRPC.PhotoSize thumb = FileLoader.getClosestPhotoSizeWithSize(document.thumbs, 90);
-                                if ("video/webm".equals(document.mime_type)) {
-                                    mediaLocation = ImageLocation.getForDocument(document);
-                                    mediaFilter = filter + "_" + ImageLoader.AUTOPLAY_FILTER;
-                                    if (thumbDrawable != null) {
-                                        thumbDrawable.overrideWidthAndHeight(512, 512);
-                                    }
-                                } else {
-                                    if (thumbDrawable != null && MessageObject.isAnimatedStickerDocument(document, false)) {
-                                        thumbDrawable.overrideWidthAndHeight(512, 512);
-                                    }
-                                    mediaLocation = ImageLocation.getForDocument(document);
-                                    mediaFilter = filter;
-                                }
-                                icon.setLayerNum(7);
-                                icon.setRoundRadius(AndroidUtilities.dp(4));
-                                icon.setImage(mediaLocation, mediaFilter, ImageLocation.getForDocument(thumb, document), "140_140", thumbDrawable, document);
-                                if (((AnimatedEmojiDrawable) emojiStatusDrawable.getDrawable()).canOverrideColor()) {
-                                    icon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_windowBackgroundWhiteBlueIcon), PorterDuff.Mode.SRC_IN));
-                                    premiumPreviewBottomSheet.statusStickerSet = MessageObject.getInputStickerSet(document);
-                                } else {
-                                    premiumPreviewBottomSheet.statusStickerSet = MessageObject.getInputStickerSet(document);
-                                }
-                                premiumPreviewBottomSheet.overrideTitleIcon = icon;
-                                premiumPreviewBottomSheet.isEmojiStatus = true;
-                            }
-                        }
-                        showDialog(premiumPreviewBottomSheet);
                     });
                 }
             }
