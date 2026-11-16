@@ -5726,29 +5726,16 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
     }
 
+    // PotuzhnoGram: hide Premium subscription promotions.
     public boolean isPremiumRestoreHintVisible() {
-        if (!MessagesController.getInstance(currentAccount).premiumFeaturesBlocked() && folderId == 0 && communityId == 0) {
-            return MessagesController.getInstance(currentAccount).pendingSuggestions.contains("PREMIUM_RESTORE") && !getUserConfig().isPremium() && MediaDataController.getInstance(currentAccount).getPremiumHintAnnualDiscount(false) != null;
-        }
         return false;
     }
 
     public boolean isPremiumChristmasHintVisible() {
-        if (!MessagesController.getInstance(currentAccount).premiumFeaturesBlocked() && folderId == 0 && communityId == 0) {
-            return MessagesController.getInstance(currentAccount).pendingSuggestions.contains("PREMIUM_CHRISTMAS");
-        }
         return false;
     }
 
     public boolean isPremiumHintVisible() {
-        if (!MessagesController.getInstance(currentAccount).premiumFeaturesBlocked() && folderId == 0 && communityId == 0) {
-            if (MessagesController.getInstance(currentAccount).pendingSuggestions.contains("PREMIUM_UPGRADE") && getUserConfig().isPremium() || MessagesController.getInstance(currentAccount).pendingSuggestions.contains("PREMIUM_ANNUAL") && !getUserConfig().isPremium()) {
-                if (UserConfig.getInstance(currentAccount).isPremium() ? !BuildVars.useInvoiceBilling() && MediaDataController.getInstance(currentAccount).getPremiumHintAnnualDiscount(true) != null : MediaDataController.getInstance(currentAccount).getPremiumHintAnnualDiscount(false) != null) {
-                    isPremiumHintUpgrade = MessagesController.getInstance(currentAccount).pendingSuggestions.contains("PREMIUM_UPGRADE");
-                    return true;
-                }
-            }
-        }
         return false;
     }
 
@@ -5879,15 +5866,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private int shiftDp = -4;
     private void showPremiumBlockedToast(View view, long dialogId) {
+        // PotuzhnoGram: do not display Premium upsell text for server-side restrictions.
         AndroidUtilities.shakeViewSpring(view, shiftDp = -shiftDp);
         BotWebViewVibrationEffect.APP_ERROR.vibrate();
-        String username = "";
-        if (dialogId >= 0) {
-            username = UserObject.getUserName(MessagesController.getInstance(currentAccount).getUser(dialogId));
-        }
-        BulletinFactory.of(this)
-                .createSimpleBulletin(R.raw.chats_infotip, AndroidUtilities.replaceTags(LocaleController.formatString(R.string.UserBlockedNonPremium, username)))
-                .show();
     }
 
     private void updateDialogsHint() {
@@ -5926,7 +5907,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 MessagesController.getInstance(currentAccount).removeSuggestion(0, "SETUP_PASSKEY");
                 updateDialogsHint();
             });
-        } else if (folderId == 0 && communityId == 0 && getMessagesController().pendingSuggestions.contains("PREMIUM_GRACE")) {
+        } else if (false && folderId == 0 && communityId == 0 && getMessagesController().pendingSuggestions.contains("PREMIUM_GRACE")) {
             dialogsHintCellVisible = true;
             dialogsHintCell.setOnClickListener(v -> {
                 Browser.openUrl(getContext(), getMessagesController().premiumManageSubscriptionUrl);
@@ -6567,8 +6548,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 break;
             }
         }
-        boolean visible = !getUserConfig().isPremium() && !getMessagesController().premiumFeaturesBlocked() && visibleByDownload && visibleByPosition;
-        animatorSpeedButtonVisible.setValue(visible, true);
+        // PotuzhnoGram: hide Premium download-speed promotion.
+        animatorSpeedButtonVisible.setValue(false, true);
     }
 
     private void createActionMode(String tag) {
