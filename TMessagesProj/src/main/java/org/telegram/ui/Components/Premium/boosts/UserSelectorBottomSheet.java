@@ -344,7 +344,7 @@ public class UserSelectorBottomSheet extends BottomSheetWithRecyclerListView imp
         };
         ThemeBind.backgroundColor(searchField, Theme.key_dialogBackground, resourcesProvider);
         searchField.setOnSearchTextChange(this::onSearch);
-        searchField.setHintText(getString(!selectedIds.isEmpty() || type == TYPE_STARS || type == TYPE_STAR_GIFT || type == TYPE_TRANSFER || type == TYPE_CALL ? R.string.Search : R.string.GiftPremiumUsersSearchHint), false);
+        searchField.setHintText(getString(!selectedIds.isEmpty() || type == TYPE_PREMIUM || type == TYPE_STARS || type == TYPE_STAR_GIFT || type == TYPE_TRANSFER || type == TYPE_CALL ? R.string.Search : R.string.GiftPremiumUsersSearchHint), false);
 
         sectionCell = new View(getContext()) {
             @Override
@@ -1268,11 +1268,11 @@ public class UserSelectorBottomSheet extends BottomSheetWithRecyclerListView imp
         switch (type) {
             case TYPE_CALL:
                 return getString(R.string.VoipConferenceAddPeople);
+            case TYPE_PREMIUM:
             case TYPE_STARS:
                 return getString(R.string.GiftStarsTitle);
             case TYPE_STAR_GIFT:
-            case TYPE_PREMIUM:
-                return getString(R.string.GiftTelegramPremiumOrStarsTitle);
+                return getString(R.string.GiftTelegramPremiumTitle);
         }
         return getString(R.string.GiftTelegramPremiumTitle);
     }
