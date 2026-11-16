@@ -38097,14 +38097,7 @@ public class ChatActivity extends BaseFragment implements
                 ((ChatActionCell) view).setDelegate(new ChatActionCell.ChatActionCellDelegate() {
                     @Override
                     public void didOpenPremiumGift(ChatActionCell cell, TLRPC.TL_premiumGiftOption giftOption, String slug, boolean animateConfetti) {
-                        if (slug != null) {
-                            initGiftProgressDialog(cell);
-                            PremiumPreviewGiftLinkBottomSheet.show(slug, progressDialogCurrent);
-                        } else {
-                            showDialog(new PremiumPreviewBottomSheet(ChatActivity.this, currentAccount, getCurrentUser(), new GiftPremiumBottomSheet.GiftTier(giftOption, null), null, themeDelegate)
-                                .setAnimateConfetti(animateConfetti)
-                                .setOutboundGift(cell.getMessageObject().isOut()));
-                        }
+                        // PotuzhnoGram: Premium subscription gifting screens are disabled.
                     }
 
                     @Override
@@ -40640,66 +40633,9 @@ public class ChatActivity extends BaseFragment implements
 
         @Override
         public void didPressUserStatus(ChatMessageCell cell, TLRPC.User user, TLRPC.Document document, String giftSlug) {
-            if (cell == null) {
-                return;
-            }
             if (!TextUtils.isEmpty(giftSlug)) {
                 Browser.openUrl(getContext(), "https://" + getMessagesController().linkPrefix + "/nft/" + giftSlug);
-                return;
             }
-            PremiumPreviewBottomSheet premiumPreviewBottomSheet = new PremiumPreviewBottomSheet(ChatActivity.this, currentAccount, user, themeDelegate);
-            int[] coords = new int[2];
-            cell.getLocationOnScreen(coords);
-            premiumPreviewBottomSheet.startEnterFromX = cell.getNameStatusX();
-            premiumPreviewBottomSheet.startEnterFromY = cell.getNameStatusY();
-            premiumPreviewBottomSheet.startEnterFromScale = cell.getScaleX();
-            premiumPreviewBottomSheet.startEnterFromX1 = cell.getLeft();
-            premiumPreviewBottomSheet.startEnterFromY1 = cell.getTop();
-            premiumPreviewBottomSheet.startEnterFromView = cell;
-            int colorId = UserObject.getColorId(user);
-            if (colorId < 7) {
-                premiumPreviewBottomSheet.accentColor = getThemedColor(Theme.keys_avatar_nameInMessage[colorId]);
-            } else {
-                final MessagesController.PeerColors peerColors = MessagesController.getInstance(currentAccount).peerColors;
-                final MessagesController.PeerColor peerColor = peerColors != null ? peerColors.getColor(colorId) : null;
-                premiumPreviewBottomSheet.accentColor = peerColor != null ? peerColor.getColor1() : null;
-            }
-            if (cell.currentNameStatusDrawable != null && cell.currentNameStatusDrawable.getDrawable() instanceof AnimatedEmojiDrawable) {
-                premiumPreviewBottomSheet.startEnterFromScale *= 0.95f;
-                if (document != null) {
-                    BackupImageView icon = new BackupImageView(getContext());
-                    String filter = "160_160";
-                    ImageLocation mediaLocation;
-                    String mediaFilter;
-                    SvgHelper.SvgDrawable thumbDrawable = DocumentObject.getSvgThumb(document.thumbs, Theme.key_windowBackgroundWhiteGrayIcon, 0.2f);
-                    TLRPC.PhotoSize thumb = FileLoader.getClosestPhotoSizeWithSize(document.thumbs, 90);
-                    if ("video/webm".equals(document.mime_type)) {
-                        mediaLocation = ImageLocation.getForDocument(document);
-                        mediaFilter = filter + "_" + ImageLoader.AUTOPLAY_FILTER;
-                        if (thumbDrawable != null) {
-                            thumbDrawable.overrideWidthAndHeight(512, 512);
-                        }
-                    } else {
-                        if (thumbDrawable != null && MessageObject.isAnimatedStickerDocument(document, false)) {
-                            thumbDrawable.overrideWidthAndHeight(512, 512);
-                        }
-                        mediaLocation = ImageLocation.getForDocument(document);
-                        mediaFilter = filter;
-                    }
-                    icon.setLayerNum(7);
-                    icon.setRoundRadius(AndroidUtilities.dp(4));
-                    icon.setImage(mediaLocation, mediaFilter, ImageLocation.getForDocument(thumb, document), "140_140", thumbDrawable, document);
-                    if (MessageObject.isTextColorEmoji(document)) {
-                        icon.setColorFilter(new PorterDuffColorFilter(premiumPreviewBottomSheet.accentColor != null ? premiumPreviewBottomSheet.accentColor : getThemedColor(Theme.key_windowBackgroundWhiteBlueIcon), PorterDuff.Mode.SRC_IN));
-                        premiumPreviewBottomSheet.statusStickerSet = MessageObject.getInputStickerSet(document);
-                    } else {
-                        premiumPreviewBottomSheet.statusStickerSet = MessageObject.getInputStickerSet(document);
-                    }
-                    premiumPreviewBottomSheet.overrideTitleIcon = icon;
-                    premiumPreviewBottomSheet.isEmojiStatus = true;
-                }
-            }
-            showDialog(premiumPreviewBottomSheet);
         }
 
         @Override
