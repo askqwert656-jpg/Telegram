@@ -33654,10 +33654,7 @@ public class ChatActivity extends BaseFragment implements
         } else if (getDialogId() != getUserConfig().getClientUserId()) {
             if (userInfo != null && userInfo.contact_require_premium) {
                 greetingsViewContainer.setPremiumLock(!getUserConfig().isPremium(), AndroidUtilities.replaceTags(formatString(getMessagesController().premiumFeaturesBlocked() ? R.string.MessageLockedPremiumLocked : R.string.MessageLockedPremium, DialogObject.getShortName(dialog_id))), LocaleController.getString(R.string.MessagePremiumUnlock), v -> {
-                    BaseFragment fragment = LaunchActivity.getLastFragment();
-                    if (fragment != null) {
-                        fragment.presentFragment(new PremiumPreviewFragment("contact"));
-                    }
+                    // PotuzhnoGram: Premium purchase screens are disabled.
                 });
             } else if (userInfo != null && userInfo.send_paid_messages_stars > 0) {
                 final long send_paid_messages_stars = userInfo.send_paid_messages_stars;
@@ -41104,7 +41101,7 @@ public class ChatActivity extends BaseFragment implements
 
         @Override
         public void needShowPremiumFeatures(String source) {
-            presentFragment(new PremiumPreviewFragment(source));
+            // PotuzhnoGram: Premium purchase screens are disabled.
         }
 
         @Override
@@ -41674,12 +41671,7 @@ public class ChatActivity extends BaseFragment implements
                 args.putInt("start_from", SharedMediaLayout.TAB_RECOMMENDED_CHANNELS);
                 presentFragment(new MediaActivity(args, avatarContainer.getSharedMediaPreloader()));
             } else {
-                BulletinFactory.of(ChatActivity.this).createSimpleBulletin(
-                    R.raw.star_premium_2,
-                    AndroidUtilities.replaceSingleTag(formatPluralStringComma("UnlockSimilarChannelsPremium", getMessagesController().recommendedChannelsLimitPremium), () -> {
-                        presentFragment(new PremiumPreviewFragment("similar_channels"));
-                    })
-                ).show();
+                // PotuzhnoGram: Premium-only similar channel expansion is unavailable.
             }
         }
 
@@ -45138,9 +45130,7 @@ public class ChatActivity extends BaseFragment implements
         BulletinFactory.of(this).createSimpleBulletin(
             R.raw.speed_limit,
             LocaleController.getString(isUpload ? R.string.UploadSpeedLimited : R.string.DownloadSpeedLimited),
-            AndroidUtilities.replaceCharSequence("%d", AndroidUtilities.premiumText(LocaleController.getString(isUpload ? R.string.UploadSpeedLimitedMessage : R.string.DownloadSpeedLimitedMessage), () -> {
-                presentFragment(new PremiumPreviewFragment(isUpload ? "upload_speed" : "download_speed"));
-            }), boldN)
+            AndroidUtilities.replaceCharSequence("%d", LocaleController.getString(isUpload ? R.string.UploadSpeedLimitedMessage : R.string.DownloadSpeedLimitedMessage), boldN)
         ).setDuration(8000).show(true);
     }
 
