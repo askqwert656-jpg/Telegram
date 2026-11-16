@@ -13161,30 +13161,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     private void openStoriesRecorder() {
         if (!storiesEnabled) {
-            if (storyPremiumHint != null) {
-                if (storyPremiumHint.shown()) {
-                    return;
-                }
-                AndroidUtilities.removeFromParent(storyPremiumHint);
-            }
-            Spannable text = AndroidUtilities.replaceSingleTag(LocaleController.getString("StoriesPremiumHint2").replace('\n', ' '), Theme.key_undo_cancelColor, 0, () -> {
-                if (storyPremiumHint != null) {
-                    storyPremiumHint.hide();
-                }
-                presentFragment(new PremiumPreviewFragment("stories"));
-            });
-            storyPremiumHint = new HintView2(getContext(), HintView2.DIRECTION_RIGHT)
-                .setRounding(8)
-                .setDuration(8_000)
-                .setCloseButton(true)
-                .setMultilineText(true)
-                .setMaxWidthPx(AndroidUtilities.displaySize.x - dp(72 + 12 + 64))
-                .setText(text)
-                .setJoint(1, -40)
-                .setBgColor(getThemedColor(Theme.key_undo_background));
-            storyPremiumHint.setTranslationY(-navigationBarHeight - additionNavigationBarHeight);
-            ((ViewGroup) fragmentView).addView(storyPremiumHint, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 240, Gravity.BOTTOM | Gravity.FILL_HORIZONTAL, 12, 0, 68, 40));
-            storyPremiumHint.show();
             return;
         }
 
