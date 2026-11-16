@@ -3225,11 +3225,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         fragmentSearchField.setPivotX(0);
         fragmentSearchField.setPivotY(0);
         if (initialDialogsType == DIALOGS_TYPE_DEFAULT) {
-            speedItem = menu.addItem(-47, R.drawable.avd_speed);
-            AndroidUtilities.removeFromParent(speedItem);
-            speedItem.setOnClickListener(v -> showDialog(new PremiumFeatureBottomSheet(DialogsActivity.this, PremiumPreviewFragment.PREMIUM_FEATURE_DOWNLOAD_SPEED, true)));
-
-            fragmentSearchField.addAdditionalIcon(speedItem);
             fragmentSearchField.updateColors();
         }
 
@@ -3491,11 +3486,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         try {
                             performHapticFeedback(HapticFeedbackConstants.KEYBOARD_PRESS, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
                         } catch (Exception ignore) {}
-                        topBulletin = BulletinFactory.of(DialogsActivity.this).createSimpleBulletin(R.raw.filter_reorder, AndroidUtilities.replaceTags(LocaleController.formatString(R.string.LimitReachedReorderFolder, LocaleController.getString(R.string.FilterAllChats))), LocaleController.getString(R.string.PremiumMore), Bulletin.DURATION_PROLONG, () -> {
-                            showDialog(new PremiumFeatureBottomSheet(DialogsActivity.this, PremiumPreviewFragment.PREMIUM_FEATURE_ADVANCED_CHAT_MANAGEMENT, true));
-                            filterTabsView.setIsEditing(false);
-                            showDoneItem(false);
-                        }).show(true);
+                        topBulletin = BulletinFactory.of(DialogsActivity.this).createSimpleBulletin(R.raw.filter_reorder, AndroidUtilities.replaceTags(LocaleController.formatString(R.string.LimitReachedReorderFolder, LocaleController.getString(R.string.FilterAllChats)))).show(true);
                     }
                 }
             };
@@ -5895,19 +5886,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (dialogId >= 0) {
             username = UserObject.getUserName(MessagesController.getInstance(currentAccount).getUser(dialogId));
         }
-        Bulletin bulletin;
-        if (getMessagesController().premiumFeaturesBlocked()) {
-            bulletin = BulletinFactory.of(this).createSimpleBulletin(R.raw.star_premium_2, AndroidUtilities.replaceTags(LocaleController.formatString(R.string.UserBlockedNonPremium, username)));
-        } else {
-            bulletin = BulletinFactory.of(this)
-                .createSimpleBulletin(R.raw.star_premium_2, AndroidUtilities.replaceTags(LocaleController.formatString(R.string.UserBlockedNonPremium, username)), LocaleController.getString(R.string.UserBlockedNonPremiumButton), () -> {
-                    BaseFragment lastFragment = LaunchActivity.getLastFragment();
-                    if (lastFragment != null) {
-                        presentFragment(new PremiumPreviewFragment("noncontacts"));
-                    }
-                });
-        }
-        bulletin.show();
+        BulletinFactory.of(this)
+                .createSimpleBulletin(R.raw.chats_infotip, AndroidUtilities.replaceTags(LocaleController.formatString(R.string.UserBlockedNonPremium, username)))
+                .show();
     }
 
     private void updateDialogsHint() {
