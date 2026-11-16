@@ -153,7 +153,6 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
 
     private final int currentAccount;
     private UniversalAdapter adapter;
-    private List<TLRPC.TL_premiumGiftCodeOption> options;
     private final Utilities.Callback<Boolean> closeParentSheet;
     private TLRPC.DisallowedGiftsSettings userSettings;
 
@@ -163,7 +162,6 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
 
     private final StarsIntroActivity.StarsBalanceView balanceView;
     private final FrameLayout topView;
-    private final FrameLayout premiumHeaderView;
     private final LinearLayout starsHeaderView;
     private final ExtendedGridLayoutManager layoutManager;
     private final DefaultItemAnimator itemAnimator;
@@ -171,7 +169,6 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
     private final LinkSpanDrawable.LinksTextView subtitleStarsView;
     private final LinkSpanDrawable.LinksTextView subtitleCollectiblesStarsView;
 
-    private final ArrayList<GiftPremiumBottomSheet.GiftTier> premiumTiers = new ArrayList<>();
 
     private final StarsController.GiftsList myGifts;
     private int TAB_ALL = -1;
@@ -200,7 +197,6 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
         this.currentAccount = currentAccount;
         this.dialogId = dialogId;
         this.self = UserConfig.getInstance(currentAccount).getClientUserId() == dialogId;
-        this.options = options;
         this.closeParentSheet = closeParentSheet;
         setBackgroundColorKey(Theme.key_dialogGiftsBackground);
         fixNavigationBarKey(Theme.key_dialogGiftsBackground);
@@ -244,9 +240,6 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
             }
         });
 
-        // Gift Premium header
-        premiumHeaderView = new FrameLayout(context);
-
         topView = new FrameLayout(context) {
             @Override
             protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -272,44 +265,6 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
             lastFragment.presentFragment(ProfileActivity.of(dialogId));
         });
         topView.addView(balanceView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.RIGHT | Gravity.TOP, 0, -3, -10, 0));
-
-        final LinearLayout bottomView = new LinearLayout(context);
-        bottomView.setOrientation(LinearLayout.VERTICAL);
-
-        premiumHeaderView.addView(bottomView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.FILL_HORIZONTAL | Gravity.TOP));
-
-        final TextView titleView = new TextView(context);
-        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
-        titleView.setTypeface(AndroidUtilities.bold());
-        ThemeBind.textColor(titleView, Theme.key_dialogTextBlack, resourcesProvider);
-        titleView.setGravity(Gravity.CENTER);
-        bottomView.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 4, 0, 4, 0));
-        titleView.setMaxWidth(HintView2.cutInFancyHalf(titleView.getText(), titleView.getPaint()));
-
-        final LinkSpanDrawable.LinksTextView subtitleView = new LinkSpanDrawable.LinksTextView(context, resourcesProvider);
-        ThemeBind.linkTextColor(subtitleView, Theme.key_chat_messageLinkIn, resourcesProvider);
-        subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
-        ThemeBind.textColor(subtitleView, Theme.key_dialogTextBlack, resourcesProvider);
-        subtitleView.setGravity(Gravity.CENTER);
-        subtitleView.setLineSpacing(dp(2.33f), 1.0f);
-        bottomView.addView(subtitleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 4, 4, 4, 12));
-
-        titleView.setText(getString(R.string.Gift2Premium));
-        subtitleView.setText(TextUtils.concat(
-            AndroidUtilities.replaceTags(formatString(R.string.Gift2PremiumInfo, name)),
-            " ",
-            AndroidUtilities.replaceArrows(AndroidUtilities.makeClickable(getString(R.string.Gift2PremiumInfoLink), () -> {
-                BaseFragment lastFragment = LaunchActivity.getLastFragment();
-                if (lastFragment == null) {
-                    return;
-                }
-                BaseFragment.BottomSheetParams params = new BaseFragment.BottomSheetParams();
-                params.transitionFromLeft = true;
-                params.allowNestedScroll = false;
-                lastFragment.showAsSheet(new PremiumPreviewFragment("gifts"), params);
-            }), true)
-        ));
-        subtitleView.setMaxWidth(HintView2.cutInFancyHalf(subtitleView.getText(), subtitleView.getPaint()));
 
         // Gift Stars header
         starsHeaderView = new LinearLayout(context);
@@ -802,82 +757,6 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
                     adapter.update(true);
                 }
             }
-        }
-    }
-
-    private void updatePremiumTiers() {
-        premiumTiers.clear();
-        if (premiumTiers.isEmpty() && options != null && !options.isEmpty()) {
-            List<QueryProductDetailsParams.Product> products = new ArrayList<>();
-            long pricePerMonthMax = 0;
-            for (int i = options.size() - 1; i >= 0; i--) {
-                final TLRPC.TL_premiumGiftCodeOption option = options.get(i);
-                if ("XTR".equalsIgnoreCase(option.currency)) continue;
-                Object starsOption = null;
-                for (TLRPC.TL_premiumGiftCodeOption o : options) {
-                    if (o != option && "XTR".equalsIgnoreCase(o.currency) && o.months == option.months) {
-                        starsOption = o;
-                        break;
-                    }
-                }
-                final GiftPremiumBottomSheet.GiftTier giftTier = new GiftPremiumBottomSheet.GiftTier(option, starsOption);
-                premiumTiers.add(giftTier);
-                if (BuildVars.useInvoiceBilling()) {
-                    if (giftTier.getPricePerMonth() > pricePerMonthMax) {
-                        pricePerMonthMax = giftTier.getPricePerMonth();
-                    }
-                } else if (giftTier.getStoreProduct() != null && BillingController.getInstance().isReady()) {
-                    products.add(QueryProductDetailsParams.Product.newBuilder()
-                            .setProductType(BillingClient.ProductType.INAPP)
-                            .setProductId(giftTier.getStoreProduct())
-                            .build());
-                }
-            }
-            if (BuildVars.useInvoiceBilling()) {
-                for (GiftPremiumBottomSheet.GiftTier tier : premiumTiers) {
-                    tier.setPricePerMonthRegular(pricePerMonthMax);
-                }
-            } else if (!products.isEmpty()) {
-                long startMs = System.currentTimeMillis();
-                BillingController.getInstance().queryProductDetails(products, (billingResult, list) -> {
-                    long pricePerMonthMaxStore = 0;
-
-                    for (ProductDetails details : list) {
-                        for (GiftPremiumBottomSheet.GiftTier giftTier : premiumTiers) {
-                            if (giftTier.getStoreProduct() != null && giftTier.getStoreProduct().equals(details.getProductId())) {
-                                giftTier.setGooglePlayProductDetails(details);
-
-                                if (giftTier.getPricePerMonth() > pricePerMonthMaxStore) {
-                                    pricePerMonthMaxStore = giftTier.getPricePerMonth();
-                                }
-                                break;
-                            }
-                        }
-                    }
-
-                    for (GiftPremiumBottomSheet.GiftTier giftTier : premiumTiers) {
-                        giftTier.setPricePerMonthRegular(pricePerMonthMaxStore);
-                    }
-                    AndroidUtilities.runOnUIThread(() -> {
-                        if (adapter != null) {
-                            adapter.update(false);
-                        }
-                    });
-                });
-            }
-        }
-        if (premiumTiers.isEmpty()) {
-            BoostRepository.loadGiftOptions(currentAccount, null, paymentOptions -> {
-                if (getContext() == null || !isShown()) return;
-                options = BoostRepository.filterGiftOptions(paymentOptions, 1);
-                options = BoostRepository.filterGiftOptionsByBilling(options);
-                if (!options.isEmpty()) {
-                    updatePremiumTiers();
-                    if (adapter != null) {
-                        adapter.update(true);
-                    }
-                }
-            });
         }
     }
 
