@@ -2326,13 +2326,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                 case "tg": {
                                     String url = data.toString();
                                     if (url.startsWith("tg:premium_offer") || url.startsWith("tg://premium_offer")) {
-                                        String finalUrl = url.replace("tg:premium_offer", "tg://premium_offer");
-                                        AndroidUtilities.runOnUIThread(() -> {
-                                        if (!actionBarLayout.getFragmentStack().isEmpty()) {
-                                            BaseFragment fragment = actionBarLayout.getFragmentStack().get(0);
-                                            Uri uri = Uri.parse(finalUrl);
-                                            fragment.presentFragment(new PremiumPreviewFragment(uri.getQueryParameter("ref")));
-                                        }});
+                                        // PotuzhnoGram: Premium purchase screens are not available.
                                     } else if (url.startsWith("tg:resolve") || url.startsWith("tg://resolve")) {
                                         url = url.replace("tg:resolve", "tg://telegram.org").replace("tg://resolve", "tg://telegram.org");
                                         data = Uri.parse(url);
@@ -7496,18 +7490,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     int start = msg.indexOf('*'), end = msg.indexOf('*', start + 1);
                     if (start != -1 && end != -1 && start != end) {
                         span.replace(start, end + 1, msg.substring(start + 1, end));
-                        span.setSpan(new ClickableSpan() {
-                            @Override
-                            public void onClick(@NonNull View widget) {
-                                getActionBarLayout().presentFragment(new PremiumPreviewFragment("gift"));
-                            }
-
-                            @Override
-                            public void updateDrawState(@NonNull TextPaint ds) {
-                                super.updateDrawState(ds);
-                                ds.setUnderlineText(false);
-                            }
-                        }, start, end - 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     }
                 }
                 builder.setMessage(span);
