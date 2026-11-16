@@ -271,13 +271,10 @@ import org.telegram.ui.Components.*;
 import org.telegram.ui.Components.FloatingDebug.FloatingDebugController;
 import org.telegram.ui.Components.FloatingDebug.FloatingDebugProvider;
 import org.telegram.ui.Components.Forum.ForumUtilities;
-import org.telegram.ui.Components.Premium.GiftPremiumBottomSheet;
 import org.telegram.ui.Components.Premium.LimitReachedBottomSheet;
 import org.telegram.ui.Components.Premium.PremiumFeatureBottomSheet;
-import org.telegram.ui.Components.Premium.PremiumPreviewBottomSheet;
 import org.telegram.ui.Components.Premium.boosts.BoostDialogs;
 import org.telegram.ui.Components.Premium.boosts.GiftInfoBottomSheet;
-import org.telegram.ui.Components.Premium.boosts.PremiumPreviewGiftLinkBottomSheet;
 import org.telegram.ui.Components.Reactions.ChatSelectionReactionMenuOverlay;
 import org.telegram.ui.Components.Reactions.ReactionsEffectOverlay;
 import org.telegram.ui.Components.Reactions.ReactionsLayoutInBubble;
@@ -30381,74 +30378,7 @@ public class ChatActivity extends BaseFragment implements
             emojiStatusSpamHint.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13.3f);
             emojiStatusSpamHint.setLineSpacing(dp(1), 1);
             SpannableStringBuilder totalText = new SpannableStringBuilder();
-            if (showEmojiStatusReport != null && show) {
-                final TLRPC.EmojiStatus status = showEmojiStatusReport;
-                final Runnable openStatus = () -> {
-                    PremiumPreviewBottomSheet sheet = new PremiumPreviewBottomSheet(this, currentAccount, user, getResourceProvider());
 
-                    long document_id;
-                    if (status instanceof TLRPC.TL_emojiStatus) {
-                        TLRPC.TL_emojiStatus s = (TLRPC.TL_emojiStatus) status;
-                        document_id = s.document_id;
-                    } else if (status instanceof TLRPC.TL_emojiStatusCollectible) {
-                        TLRPC.TL_emojiStatusCollectible s = (TLRPC.TL_emojiStatusCollectible) status;
-                        document_id = s.document_id;
-                        sheet.emojiStatusCollectible = s;
-                    } else return;
-
-                    BackupImageView icon = new BackupImageView(getContext());
-                    AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable drawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(icon, dp(160), AnimatedEmojiDrawable.CACHE_TYPE_ALERT_PREVIEW_LARGE);
-                    icon.setImageDrawable(drawable);
-                    icon.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-                        @Override
-                        public void onViewAttachedToWindow(@NonNull View v) {
-                            drawable.attach();
-                        }
-                        @Override
-                        public void onViewDetachedFromWindow(@NonNull View v) {
-                            drawable.detach();
-                        }
-                    });
-                    drawable.set(document_id, false);
-
-                    sheet.isEmojiStatus = true;
-                    sheet.overrideTitleIcon = icon;
-                    showDialog(sheet);
-                };
-                SpannableStringBuilder text = new SpannableStringBuilder(AndroidUtilities.replaceSingleTag(LocaleController.getString(R.string.ReportSpamUserEmojiStatusHint2), openStatus));
-                SpannableString emoji = new SpannableString("x");
-                Long docid = null;
-                if (DialogObject.getEmojiStatusDocumentId(currentUser.emoji_status) != 0) {
-                    docid = DialogObject.getEmojiStatusDocumentId(currentUser.emoji_status);
-                }
-                if (docid != null) {
-                    AnimatedEmojiSpan span = new AnimatedEmojiSpan(docid, emojiStatusSpamHint.getPaint().getFontMetricsInt());
-                    span.full = false;
-                    emoji.setSpan(span, 0, emoji.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                }
-                SpannableString link = new SpannableString(LocaleController.getString(R.string.TelegramPremium));
-                link.setSpan(new ClickableSpan() {
-                    @Override
-                    public void onClick(@NonNull View view) {
-                        openStatus.run();
-                    }
-
-                    @Override
-                    public void updateDrawState(@NonNull TextPaint ds) {
-                        super.updateDrawState(ds);
-                        ds.setUnderlineText(false);
-                    }
-                }, 0, link.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                int i = text.toString().indexOf("%1$s");
-                if (i >= 0) {
-                    text.replace(i, i + 4, emoji);
-                }
-                i = text.toString().indexOf("%2$s");
-                if (i >= 0) {
-                    text.replace(i, i + 4, link);
-                }
-                totalText.append(AndroidUtilities.replaceArrows(text, true, dp(8f / 3f), dp(1.66f), 1.0f));
-            }
             if (showCost > 0) {
                 long _user_id = dialog_id;
                 long _parent_id = 0;
