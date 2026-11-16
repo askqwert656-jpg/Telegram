@@ -3446,6 +3446,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     statusDrawable
                 );
                 updateStatus(UserConfig.getInstance(currentAccount).getCurrentUser(), false);
+                updatePotuzhnoGramConnectionSubtitle();
             }
             if (folderId == 0) {
                 actionBar.setSupportsHolidayImage(true);
@@ -10073,6 +10074,22 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         return undoView[0];
     }
 
+    private void updatePotuzhnoGramConnectionSubtitle() {
+        if (actionBar == null || initialDialogsType != DIALOGS_TYPE_DEFAULT || onlySelect || folderId != 0 || communityId != 0 || !TextUtils.isEmpty(searchString)) {
+            return;
+        }
+        final int state = currentConnectionState;
+        final String connectionText;
+        if (state == ConnectionsManager.ConnectionStateConnected || state == ConnectionsManager.ConnectionStateUpdating) {
+            connectionText = getString(R.string.Connected);
+        } else if (state == ConnectionsManager.ConnectionStateConnecting) {
+            connectionText = getString(R.string.Connecting);
+        } else {
+            connectionText = getString(R.string.WaitingForNetwork);
+        }
+        actionBar.setSubtitle("● " + connectionText);
+    }
+
     private void updateProxyButton(boolean animated, boolean force) {
         if (proxyDrawable == null || doneItem != null && doneItem.getVisibility() == View.VISIBLE) {
             return;
@@ -10533,6 +10550,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (currentConnectionState != state) {
                 currentConnectionState = state;
                 updateProxyButton(true, false);
+                updatePotuzhnoGramConnectionSubtitle();
             }
         } else if (id == NotificationCenter.onDownloadingFilesChanged) {
             updateProxyButton(true, false);
