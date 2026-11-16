@@ -584,8 +584,7 @@ public class PremiumFeatureBottomSheet extends BottomSheet implements Notificati
 
     @Override
     public void show() {
-        super.show();
-        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.stopAllHeavyOperations, 16);
+        // PotuzhnoGram: Premium feature and purchase prompts are disabled.
     }
 
     @Override
