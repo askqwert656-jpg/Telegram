@@ -6123,7 +6123,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     .setDuration(Bulletin.DURATION_PROLONG)
                     .show();
             });
-        } else if (isPremiumChristmasHintVisible()) {
+        } else if (false && isPremiumChristmasHintVisible()) {
             dialogsHintCellVisible = true;
             dialogsHintCell.setOnClickListener(v -> UserSelectorBottomSheet.open());
             dialogsHintCell.setText(Emoji.replaceEmoji(AndroidUtilities.replaceSingleTag(
@@ -6140,7 +6140,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         .setDuration(Bulletin.DURATION_PROLONG)
                         .show();
             });
-        } else if (isPremiumRestoreHintVisible()) {
+        } else if (false && isPremiumRestoreHintVisible()) {
             dialogsHintCellVisible = true;
             dialogsHintCell.setOnClickListener(v -> {
                 presentFragment(new PremiumPreviewFragment("dialogs_hint").setSelectAnnualByDefault());
@@ -6158,7 +6158,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     ),
                     LocaleController.getString(R.string.RestorePremiumHintMessage)
             );
-        } else if (isPremiumHintVisible()) {
+        } else if (false && isPremiumHintVisible()) {
             dialogsHintCellVisible = true;
             dialogsHintCell.setOnClickListener(v -> {
                 presentFragment(new PremiumPreviewFragment("dialogs_hint").setSelectAnnualByDefault());
