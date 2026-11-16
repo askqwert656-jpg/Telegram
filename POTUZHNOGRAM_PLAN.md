@@ -5,6 +5,8 @@ Implementation work must be done on `potuzhnogram-development`; keep `master` un
 
 ## Product identity and interface
 
+- Replace the stock Telegram launcher icon with the approved PotuzhnoGram app icon. Update all required Android launcher assets (legacy density PNGs and adaptive icon foreground/background resources) and verify both round and standard launcher variants. Do not reuse Telegram's paper-plane logo.
+
 - App name: PotuzhnoGram.
 - Main screen: a custom compact chat list, not a copy of Telegram's default layout.
 - Visual direction: dark Terminal-inspired interface with cool blue/silver accents; no decorative animations.
