@@ -180,15 +180,14 @@ public static VideoAds make(
         this.bulletinFactory = bulletinFactory;
         this.lastTime = System.currentTimeMillis();
         this.first = true;
-        if (cache.loaded) {
-            start_delay = cache.startDelay;
-            between_delay = cache.betweenDelay;
-            ads.addAll(cache.ads);
-            loaded = true;
-            schedule();
-        } else {
-            load();
-        }
+
+        // PotuzhnoGram: disable sponsored video ads, including previously cached ads.
+        cache.ads.clear();
+        cache.loaded = true;
+        cache.loadTime = System.currentTimeMillis();
+        ads.clear();
+        loaded = true;
+        loading = false;
     }
 
     private int requestId;
