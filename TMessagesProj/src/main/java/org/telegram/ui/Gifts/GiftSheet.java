@@ -635,27 +635,7 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
                         }));
                         return;
                     }
-                    if (gift.require_premium && !UserConfig.getInstance(currentAccount).isPremium()) {
-                        final BaseFragment fragment = LaunchActivity.getSafeLastFragment();
-                        if (fragment == null) return;
-                        PremiumPreviewBottomSheet sheet = new PremiumPreviewBottomSheet(fragment, currentAccount, null, null, gift, resourcesProvider);
-                        BackupImageView icon = new BackupImageView(getContext());
-                        AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable drawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(icon, dp(160), AnimatedEmojiDrawable.CACHE_TYPE_ALERT_PREVIEW_LARGE);
-                        icon.setImageDrawable(drawable);
-                        icon.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-                            @Override
-                            public void onViewAttachedToWindow(@NonNull View v) {
-                                drawable.attach();
-                            }
-                            @Override
-                            public void onViewDetachedFromWindow(@NonNull View v) {
-                                drawable.detach();
-                            }
-                        });
-                        drawable.set(gift.getDocument(), false);
-                        sheet.overrideTitleIcon = icon;
-                        sheet.show();
-                        drawable.play();
+                    if (gift.require_premium) {
                         return;
                     }
 
@@ -664,7 +644,6 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
             }
         });
 
-        updatePremiumTiers();
         adapter.update(false);
         updateTitle();
 
@@ -672,7 +651,6 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
             setBirthday();
         }
 
-        NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.billingProductDetailsUpdated);
         NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.starGiftsLoaded);
         NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.userInfoDidLoad);
         NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.starGiftSoldOut);
@@ -778,7 +756,6 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
     @Override
     public void dismiss() {
         super.dismiss();
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.billingProductDetailsUpdated);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.starGiftsLoaded);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.userInfoDidLoad);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.starGiftSoldOut);
@@ -787,9 +764,7 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
 
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
-        if (id == NotificationCenter.billingProductDetailsUpdated) {
-            updatePremiumTiers();
-        } else if (id == NotificationCenter.starGiftsLoaded) {
+        if (id == NotificationCenter.starGiftsLoaded) {
             if (adapter != null) {
                 adapter.update(true);
             }
@@ -810,12 +785,6 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
                     if (adapter != null) {
                         adapter.update(true);
                     }
-                }
-            }
-            if (premiumTiers == null || premiumTiers.isEmpty()) {
-                updatePremiumTiers();
-                if (adapter != null) {
-                    adapter.update(true);
                 }
             }
         } else if (id == NotificationCenter.starGiftSoldOut) {
@@ -929,20 +898,6 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
 
     public void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         boolean pushedTopView = false;
-        if (!self && dialogId >= 0 && !(userSettings != null && userSettings.disallow_premium_gifts)) {
-            items.add(UItem.asCustom(topView));
-            pushedTopView = true;
-            items.add(UItem.asCustom(premiumHeaderView));
-            if (premiumTiers != null && !premiumTiers.isEmpty()) {
-                for (GiftPremiumBottomSheet.GiftTier tier : premiumTiers) {
-                    items.add(GiftCell.Factory.asPremiumGift(tier));
-                }
-            } else {
-                items.add(UItem.asFlicker(1, FlickerLoadingView.STAR_GIFT).setSpanCount(1));
-                items.add(UItem.asFlicker(2, FlickerLoadingView.STAR_GIFT).setSpanCount(1));
-                items.add(UItem.asFlicker(3, FlickerLoadingView.STAR_GIFT).setSpanCount(1));
-            }
-        }
 
         final StarsController s = StarsController.getInstance(currentAccount);
         ArrayList<TL_stars.StarGift> gifts;
@@ -951,6 +906,7 @@ public class GiftSheet extends BottomSheetWithRecyclerListView implements Notifi
         } else {
             gifts = s.sortedGifts;
         }
+        gifts = gifts.stream().filter(gift -> !gift.require_premium).collect(Collectors.toCollection(ArrayList::new));
         if (userSettings != null) {
             gifts = gifts.stream().filter(gift -> {
                 if (gift instanceof TL_stars.TL_starGiftUnique) {
