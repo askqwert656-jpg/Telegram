@@ -3448,7 +3448,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             } else {
                 statusDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(null, dp(26));
                 statusDrawable.center = true;
-                actionBar.setTitle(getString(R.string.AppName), statusDrawable);
+                actionBar.setTitle(
+                    initialDialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect ? "POTUZHNOGRAM" : getString(R.string.AppName),
+                    statusDrawable
+                );
                 updateStatus(UserConfig.getInstance(currentAccount).getCurrentUser(), false);
             }
             if (folderId == 0) {
