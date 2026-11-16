@@ -1,0 +1,46 @@
+name: PotuzhnoGram Android APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-debug-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout source and submodules
+        uses: actions/checkout@v4
+        with:
+          ref: potuzhnogram-development
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android build components
+        run: |
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
+          yes | sdkmanager --licenses
+
+      - name: Build PotuzhnoGram debug APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew :TMessagesProj_App:assembleAfatDebug --no-daemon --stacktrace -Dorg.gradle.jvmargs="-Xmx5g -XX:MaxMetaspaceSize=1g"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PotuzhnoGram-debug-APK
+          path: TMessagesProj_App/build/outputs/apk/afat/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
