@@ -7,8 +7,10 @@ import static org.telegram.messenger.AndroidUtilities.lerp;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -152,6 +154,12 @@ public class FragmentFloatingButton extends FrameLayout implements FactorAnimato
     private int themedIconColor;
     private boolean themedIconColorSet;
     private int themedBackgroundColor, themedBackgroundPressedColor;
+    private boolean terminalStyle;
+
+    public void setTerminalStyle() {
+        terminalStyle = true;
+        updateColors();
+    }
 
     @Override
     public void updateColors() {
@@ -159,6 +167,21 @@ public class FragmentFloatingButton extends FrameLayout implements FactorAnimato
             return;
         }
         final boolean recolorBackground = themedBackground != null && getBackground() == themedBackground;
+        if (terminalStyle) {
+            final int iconColor = Color.rgb(143, 199, 232);
+            imageView.setColorFilter(iconColor, PorterDuff.Mode.SRC_IN);
+            progressView.setProgressColor(iconColor);
+            if (!recolorBackground) {
+                GradientDrawable background = new GradientDrawable();
+                background.setShape(GradientDrawable.RECTANGLE);
+                background.setCornerRadius(dp(16));
+                background.setColor(Color.rgb(17, 29, 43));
+                background.setStroke(dp(1), Color.rgb(83, 133, 165));
+                setBackground(themedBackground = background);
+            }
+            invalidate();
+            return;
+        }
         if (isSubButton) {
             final int iconColor = Theme.getColor(Theme.key_actionBarDefaultIcon, resourcesProvider);
             if (iconColor != themedIconColor || !themedIconColorSet) {
