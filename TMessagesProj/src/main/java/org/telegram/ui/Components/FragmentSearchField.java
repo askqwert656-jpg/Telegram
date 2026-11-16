@@ -8,6 +8,7 @@ import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -266,6 +267,12 @@ public class FragmentSearchField extends FrameLayout implements FactorAnimator.T
     }
 
     private boolean isWhiteBackground;
+    private boolean isTerminalStyle;
+
+    public void setTerminalStyle() {
+        isTerminalStyle = true;
+        updateColors();
+    }
 
     public void setWhiteBackground() {
         isWhiteBackground = true;
@@ -274,6 +281,32 @@ public class FragmentSearchField extends FrameLayout implements FactorAnimator.T
 
     @Override
     public void updateColors() {
+        if (isTerminalStyle) {
+            final int textColor = Color.rgb(218, 235, 247);
+            final int accentColor = Color.rgb(143, 199, 232);
+            bg = Theme.createRoundRectDrawable(dp(12), Color.rgb(17, 29, 43));
+            searchIcon.setColorFilter(accentColor, PorterDuff.Mode.MULTIPLY);
+            closeIcon.setColorFilter(accentColor, PorterDuff.Mode.MULTIPLY);
+            closeIcon.setBackground(Theme.createSelectorDrawable(Color.argb(45, 143, 199, 232), 1, dp(17)));
+            editText.setHintTextColor(Color.rgb(126, 157, 180));
+            editText.setTextColor(textColor);
+            editText.setCursorColor(accentColor);
+            if (blurredBackgroundDrawable != null) {
+                blurredBackgroundDrawable.updateColors();
+            }
+            for (int i = 0, N = additionalIconsLayout.getChildCount(); i < N; i++) {
+                View view = additionalIconsLayout.getChildAt(i);
+                if (view instanceof ActionBarMenuItem) {
+                    ActionBarMenuItem item = (ActionBarMenuItem) view;
+                    if (item.getIconView() != null) {
+                        item.getIconView().setColorFilter(accentColor, PorterDuff.Mode.MULTIPLY);
+                    }
+                    view.setBackground(Theme.createSelectorDrawable(Color.argb(45, 143, 199, 232), 1, dp(17)));
+                }
+            }
+            invalidate();
+            return;
+        }
         final boolean isDark = resourcesProvider != null ? resourcesProvider.isDark() : Theme.isCurrentThemeDark();
         bg = isSectionBackground ?
             Theme.createRoundRectDrawableShadowed(dp(20), getThemedColor(Theme.key_windowBackgroundWhite)) :
