@@ -196,11 +196,13 @@ public static VideoAds make(
     private void load() {
         if (loading || loaded) return;
 
-        if (UserConfig.getInstance(currentAccount).isPremium() && MessagesController.getInstance(currentAccount).isSponsoredDisabled()) {
-            return;
-        }
-
-        loading = true;
+        // PotuzhnoGram: sponsored video ads are disabled.
+        loaded = true;
+        loading = false;
+        cache.loaded = true;
+        cache.ads.clear();
+        cache.loadTime = System.currentTimeMillis();
+        return;
 
         TLRPC.TL_messages_getSponsoredMessages req = new TLRPC.TL_messages_getSponsoredMessages();
         req.peer = MessagesController.getInstance(currentAccount).getInputPeer(dialogId);
