@@ -3094,6 +3094,16 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         ThemeBind.actionBarItemsBackgroundColor(actionBar, Theme.key_actionBarActionModeDefaultSelector, getResourceProvider(), true);
         ThemeBind.actionBarItemsColor(actionBar, Theme.key_actionBarDefaultIcon, getResourceProvider(), false);
         ThemeBind.actionBarItemsColor(actionBar, Theme.key_actionBarActionModeDefaultIcon, getResourceProvider(), true);
+
+        // PotuzhnoGram terminal-style header on the main dialogs screen only.
+        if (initialDialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect && folderId == 0 && communityId == 0) {
+            actionBar.setBackgroundColor(Color.rgb(10, 17, 27));
+            actionBar.setTitleColor(Color.rgb(218, 235, 247));
+            actionBar.setItemsColor(Color.rgb(143, 199, 232), false);
+            actionBar.setSearchTextColor(Color.rgb(218, 235, 247), false);
+            actionBar.setSearchTextColor(Color.rgb(126, 157, 180), true);
+        }
+
         actionBar.createAdditionalSubTitleOverlayContainer();
         actionBar.getAdditionalSubTitleOverlayContainer().setTranslationX(dp(4));
         actionBar.getAdditionalSubTitleOverlayContainer().setTranslationY(-dp(3));
