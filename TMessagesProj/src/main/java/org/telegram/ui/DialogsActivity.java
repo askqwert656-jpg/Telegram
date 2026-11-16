@@ -4660,6 +4660,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         contentView.addView(floatingButtonStories, FragmentFloatingButton.createSubButtonLayoutParams());
 
         floatingButton3 = new FragmentFloatingButton(context, resourceProvider);
+        if (initialDialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect && folderId == 0 && communityId == 0) {
+            floatingButton3.setTerminalStyle();
+        }
         contentView.addView(floatingButton3, FragmentFloatingButton.createDefaultLayoutParams());
         floatingButton3.setOnClickListener(v -> {
             if (parentLayout != null && parentLayout.isInPreviewMode()) {
