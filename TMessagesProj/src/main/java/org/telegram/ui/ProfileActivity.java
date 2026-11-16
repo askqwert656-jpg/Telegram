@@ -4569,8 +4569,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 presentFragment(new StarsIntroActivity());
             } else if (position == tonRow) {
                 presentFragment(new TONIntroActivity());
-            } else if (position == premiumGiftingRow) {
-                UserSelectorBottomSheet.open(0, BirthdayController.getInstance(currentAccount).getState());
             } else if (position == botPermissionLocation) {
                 if (botLocation != null) {
                     botLocation.setGranted(!botLocation.granted(), () -> {
@@ -11018,10 +11016,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (ApplicationLoader.isBetaBuild() || ApplicationLoader.isStandaloneBuild() || ApplicationLoader.isHuaweiStoreBuild() || (StarsController.getInstance(currentAccount, true).balanceAvailable() && (StarsController.getInstance(currentAccount, true).hasTransactions() || StarsController.getInstance(currentAccount, true).getBalance().positive()))) {
                     tonRow = rowCount++;
                 }
-                if (!getMessagesController().premiumPurchaseBlocked()) {
-                    premiumGiftingRow = rowCount++;
-                }
-                if (premiumRow >= 0 || starsRow >= 0 || tonRow >= 0 || businessRow >= 0 || premiumGiftingRow >= 0) {
+                if (premiumRow >= 0 || starsRow >= 0 || tonRow >= 0 || businessRow >= 0) {
                     premiumSectionsRow = rowCount++;
                 }
                 helpHeaderRow = rowCount++;
@@ -14840,10 +14835,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     new SearchResult(700, getString(R.string.Filters), null, R.drawable.msg2_folder, () -> f.presentFragment(new FiltersSetupActivity())).withLink("tg://settings/folders"),
                     new SearchResult(701, getString(R.string.CreateNewFilter), "createFilterRow", getString(R.string.Filters), R.drawable.msg2_folder, () -> f.presentFragment(new FiltersSetupActivity())).withLink("tg://settings/folders/create"),
 
-                    isPremiumFeatureAvailable(currentAccount, PremiumPreviewFragment.PREMIUM_FEATURE_PROFILE_BADGE) ? new SearchResult(810, getString(R.string.PremiumPreviewProfileBadge), getString(R.string.TelegramPremium), R.drawable.msg_settings_premium, () -> f.showDialog(new PremiumFeatureBottomSheet(f, PremiumPreviewFragment.PREMIUM_FEATURE_PROFILE_BADGE, false).setForceAbout())) : null,
-                    isPremiumFeatureAvailable(currentAccount, PremiumPreviewFragment.PREMIUM_FEATURE_ANIMATED_AVATARS) ? new SearchResult(811, getString(R.string.PremiumPreviewAnimatedProfiles), getString(R.string.TelegramPremium), R.drawable.msg_settings_premium, () -> f.showDialog(new PremiumFeatureBottomSheet(f, PremiumPreviewFragment.PREMIUM_FEATURE_ANIMATED_AVATARS, false).setForceAbout())) : null,
-                    isPremiumFeatureAvailable(currentAccount, PremiumPreviewFragment.PREMIUM_FEATURE_APPLICATION_ICONS) ? new SearchResult(812, getString(R.string.PremiumPreviewAppIcon), getString(R.string.TelegramPremium), R.drawable.msg_settings_premium, () -> f.showDialog(new PremiumFeatureBottomSheet(f, PremiumPreviewFragment.PREMIUM_FEATURE_APPLICATION_ICONS, false).setForceAbout())) : null,
-                    isPremiumFeatureAvailable(currentAccount, PremiumPreviewFragment.PREMIUM_FEATURE_EMOJI_STATUS) ? new SearchResult(813, getString(R.string.PremiumPreviewEmojiStatus), getString(R.string.TelegramPremium), R.drawable.msg_settings_premium, () -> f.showDialog(new PremiumFeatureBottomSheet(f, PremiumPreviewFragment.PREMIUM_FEATURE_EMOJI_STATUS, false).setForceAbout())) : null,
 
                     new SearchResult(900, getString(R.string.PowerUsage), null, R.drawable.msg2_battery, () -> f.presentFragment(new LiteModeSettingsActivity())).withLink("tg://settings/power-saving"),
                     new SearchResult(901, getString(R.string.LiteOptionsStickers), getString(R.string.PowerUsage), R.drawable.msg2_battery, () -> {
@@ -15578,7 +15569,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             presentFragment(new QrShareActivity(args));
         } else if (parent.getTag() != null && ((int) parent.getTag()) == birthdayRow) {
             if (userId == getUserConfig().getClientUserId()) {
-                presentFragment(new PremiumPreviewFragment("my_profile_gift"));
                 return;
             }
             if (UserObject.areGiftsDisabled(userInfo)) {
