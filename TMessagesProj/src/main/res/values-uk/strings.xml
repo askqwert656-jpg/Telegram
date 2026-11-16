@@ -276,8 +276,4 @@
     <string name="RemindTodayAt">\'Нагадати сьогодні,\' HH:mm</string>
     <string name="RemindDayAt">\'Нагадати\' d MMM\',\' HH:mm</string>
     <string name="RemindDayYearAt">\'Нагадати\' d MMM yyyy\',\' HH:mm</string>
-    <!-- PotuzhnoGram connection status -->
-    <string name="Connected">Підключено</string>
-    <string name="Connecting">Підключення...</string>
-    <string name="WaitingForNetwork">Очікування мережі...</string>
 </resources>
