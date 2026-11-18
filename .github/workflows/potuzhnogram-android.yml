@@ -50,7 +50,7 @@ jobs:
           with open(path, encoding="utf-8") as f:
               source = f.read()
           source, n1 = re.subn(
-              r'public\s+static\s+(?:final\s+)?int\s+APP_ID\s*=\s*\d+\s*;',
+              r'public\s+static\s+(?:final\s+)?int\s+APP_ID\s*=\s*[0-9]+\s*;',
               f'public static int APP_ID = {app_id};', source)
           source, n2 = re.subn(
               r'public\s+static\s+(?:final\s+)?String\s+APP_HASH\s*=\s*"[^"]*"\s*;',
@@ -60,6 +60,7 @@ jobs:
           with open(path, "w", encoding="utf-8") as f:
               f.write(source)
           print("Telegram API credentials configured.")
+          PY
 
       - name: Prepare and verify private signing key
         env:
