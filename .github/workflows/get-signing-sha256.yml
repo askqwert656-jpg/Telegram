@@ -1,0 +1,32 @@
+name: Get signing certificate SHA256
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fingerprint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decode keystore and print certificate fingerprint
+        env:
+          KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64" || { echo "ERROR: SIGNING_KEYSTORE_BASE64 is missing"; exit 1; }
+          test -n "$STORE_PASSWORD" || { echo "ERROR: SIGNING_STORE_PASSWORD is missing"; exit 1; }
+
+          KEYSTORE="$RUNNER_TEMP/signing.keystore"
+          trap 'rm -f "$KEYSTORE"' EXIT
+
+          printf '%s' "$KEYSTORE_B64" | tr -d '\r\n ' | base64 --decode > "$KEYSTORE"
+
+          echo "Certificate SHA-256 fingerprint:"
+          keytool -list -v -keystore "$KEYSTORE" -storepass "$STORE_PASSWORD" 2>&1 \
+            | grep -E 'SHA256:|SHA-256:' || {
+              echo "ERROR: Could not read certificate fingerprint. Check the keystore file and store password."
+              exit 1
+            }
