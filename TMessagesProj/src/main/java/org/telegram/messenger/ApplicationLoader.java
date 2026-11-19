@@ -408,10 +408,15 @@ public class ApplicationLoader extends Application {
     }
 
     private void initPushServices() {
+        android.util.Log.i("PG_PUSH_DIAG", "init package=" + applicationContext.getPackageName());
         AndroidUtilities.runOnUIThread(() -> {
-            if (getPushProvider().hasServices()) {
+            boolean hasPushServices = getPushProvider().hasServices();
+            android.util.Log.i("PG_PUSH_DIAG", "provider=" + getPushProvider().getLogTitle() + " available=" + hasPushServices);
+            if (hasPushServices) {
+                android.util.Log.i("PG_PUSH_DIAG", "requesting push token");
                 getPushProvider().onRequestPushToken();
             } else {
+                android.util.Log.i("PG_PUSH_DIAG", "push provider unavailable; reporting null token");
                 if (BuildVars.LOGS_ENABLED) {
                     FileLog.d("No valid " + getPushProvider().getLogTitle() + " APK found.");
                 }

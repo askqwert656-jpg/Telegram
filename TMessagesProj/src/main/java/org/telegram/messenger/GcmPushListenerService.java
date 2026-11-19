@@ -22,16 +22,19 @@ public class GcmPushListenerService extends FirebaseMessagingService {
         String from = message.getFrom();
         Map<String, String> data = message.getData();
         long time = message.getSentTime();
+        String encryptedPayload = data.get("p");
+        android.util.Log.i("PG_PUSH_DIAG", "FCM onMessageReceived keys=" + data.keySet() + " encryptedPayloadPresent=" + !TextUtils.isEmpty(encryptedPayload) + " payloadLength=" + (encryptedPayload == null ? 0 : encryptedPayload.length()));
 
         if (BuildVars.LOGS_ENABLED) {
             FileLog.d("FCM received data: " + data + " from: " + from);
         }
 
-        PushListenerController.processRemoteMessage(PushListenerController.PUSH_TYPE_FIREBASE, data.get("p"), time);
+        PushListenerController.processRemoteMessage(PushListenerController.PUSH_TYPE_FIREBASE, encryptedPayload, time);
     }
 
     @Override
     public void onNewToken(@NonNull String token) {
+        android.util.Log.i("PG_PUSH_DIAG", "FCM onNewToken tokenLength=" + (token == null ? 0 : token.length()));
         AndroidUtilities.runOnUIThread(() -> {
             if (BuildVars.LOGS_ENABLED) {
                 FileLog.d("Refreshed FCM token: " + token);
