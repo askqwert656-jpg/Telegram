@@ -1104,6 +1104,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 	}
 
 	private void startOutgoingCall() {
+		if (BuildVars.LOGS_ENABLED) FileLog.d("PotuzhnoGramVoIP: outgoing start t=" + SystemClock.elapsedRealtime() + " account=" + currentAccount);
 		if (USE_CONNECTION_SERVICE && systemCallConnection != null) {
 			systemCallConnection.setDialing();
 		}
@@ -1119,8 +1120,10 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		req.random_length = 256;
 		final MessagesStorage messagesStorage = MessagesStorage.getInstance(currentAccount);
 		req.version = messagesStorage.getLastSecretVersion();
+		if (BuildVars.LOGS_ENABLED) FileLog.d("PotuzhnoGramVoIP: getDhConfig request t=" + SystemClock.elapsedRealtime());
 		callReqId = ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> {
 			callReqId = 0;
+			if (BuildVars.LOGS_ENABLED) FileLog.d("PotuzhnoGramVoIP: getDhConfig response t=" + SystemClock.elapsedRealtime() + " error=" + (error == null ? "none" : error.code + ":" + error.text));
 			if (endCallAfterRequest) {
 				callEnded();
 				return;
@@ -1164,7 +1167,9 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 				reqCall.g_a_hash = Utilities.computeSHA256(g_a, 0, g_a.length);
 				reqCall.random_id = Utilities.random.nextInt();
 
+				if (BuildVars.LOGS_ENABLED) FileLog.d("PotuzhnoGramVoIP: phone.requestCall sent t=" + SystemClock.elapsedRealtime());
 				ConnectionsManager.getInstance(currentAccount).sendRequest(reqCall, (response12, error12) -> AndroidUtilities.runOnUIThread(() -> {
+					if (BuildVars.LOGS_ENABLED) FileLog.d("PotuzhnoGramVoIP: phone.requestCall response t=" + SystemClock.elapsedRealtime() + " error=" + (error12 == null ? "none" : error12.code + ":" + error12.text));
 					if (error12 == null) {
 						privateCall = ((TL_phone.TL_phone_phoneCall) response12).phone_call;
 						a_or_b = salt1;
@@ -3509,6 +3514,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 	}
 
 	private void initiateActualEncryptedCall() {
+		if (BuildVars.LOGS_ENABLED) FileLog.d("PotuzhnoGramVoIP: encrypted call init t=" + SystemClock.elapsedRealtime() + " endpoints=" + (privateCall == null ? 0 : privateCall.connections.size()));
 		if (timeoutRunnable != null) {
 			AndroidUtilities.cancelRunOnUIThread(timeoutRunnable);
 			timeoutRunnable = null;
@@ -3627,6 +3633,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 				}
 			}
 			// init
+			if (BuildVars.LOGS_ENABLED) FileLog.d("PotuzhnoGramVoIP: native instance create t=" + SystemClock.elapsedRealtime() + " network=" + getNetworkType() + " endpoints=" + endpoints.length);
 			tgVoip[CAPTURE_DEVICE_CAMERA] = Instance.makeInstance(privateCall.protocol.library_versions.get(0), config, persistentStateFilePath, endpoints, null, getNetworkType(), encryptionKey, remoteSink[CAPTURE_DEVICE_CAMERA], captureDevice[CAPTURE_DEVICE_CAMERA], (uids, levels, voice) -> {
 				if (sharedInstance == null || privateCall == null) {
 					return;
@@ -5594,6 +5601,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 	}
 
 	public void onConnectionStateChanged(int newState, boolean inTransition) {
+		if (BuildVars.LOGS_ENABLED) FileLog.d("PotuzhnoGramVoIP: native state=" + newState + " transition=" + inTransition + " t=" + SystemClock.elapsedRealtime());
 		AndroidUtilities.runOnUIThread(() -> {
 			if (convertingVoip != null) {
 				return;
