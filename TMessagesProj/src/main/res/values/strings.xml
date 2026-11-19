@@ -11679,4 +11679,7 @@
     <string name="FpnvConsentSimSlot">SIM Slot</string>
     <string name="FpnvConsentSimSlotValue">SIM %1$d</string>
     <string name="FpnvConsentPhoneNumber">Phone Number</string>
+    <string name="PotuzhnoGramStarsAndGifts">My Stars &amp; Gifts</string>
+    <string name="PotuzhnoGramStarsAndGiftsInfo">View your balance and gift history</string>
+    <string name="PotuzhnoGramGiftStats">Gifts in profile: %1$d • Gift sales in loaded history: %2$d</string>
 </resources>
