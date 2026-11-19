@@ -2,6 +2,9 @@ name: PotuzhnoGram Android APK
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - potuzhnogram-development
 
 permissions:
   contents: read
