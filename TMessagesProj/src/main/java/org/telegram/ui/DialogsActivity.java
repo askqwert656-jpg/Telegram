@@ -3093,14 +3093,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         ThemeBind.actionBarItemsColor(actionBar, Theme.key_actionBarDefaultIcon, getResourceProvider(), false);
         ThemeBind.actionBarItemsColor(actionBar, Theme.key_actionBarActionModeDefaultIcon, getResourceProvider(), true);
 
-        // PotuzhnoGram terminal-style header on the main dialogs screen only.
-        if (initialDialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect && folderId == 0 && communityId == 0) {
-            actionBar.setBackgroundColor(Color.rgb(10, 17, 27));
-            actionBar.setTitleColor(Color.rgb(218, 235, 247));
-            actionBar.setItemsColor(Color.rgb(143, 199, 232), false);
-            actionBar.setSearchTextColor(Color.rgb(218, 235, 247), false);
-            actionBar.setSearchTextColor(Color.rgb(126, 157, 180), true);
-        }
+        // PotuzhnoGram main header follows the active day/night theme.
+        updatePotuzhnoGramActionBarColors();
 
         actionBar.createAdditionalSubTitleOverlayContainer();
         actionBar.getAdditionalSubTitleOverlayContainer().setTranslationX(dp(4));
@@ -13986,10 +13980,22 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     }
 
 
+    private void updatePotuzhnoGramActionBarColors() {
+        if (actionBar == null || initialDialogsType != DIALOGS_TYPE_DEFAULT || onlySelect || folderId != 0 || communityId != 0) {
+            return;
+        }
+        actionBar.setBackgroundColor(getThemedColor(Theme.key_actionBarDefault));
+        actionBar.setTitleColor(getThemedColor(Theme.key_actionBarDefaultTitle));
+        actionBar.setItemsColor(getThemedColor(Theme.key_actionBarDefaultIcon), false);
+        actionBar.setSearchTextColor(getThemedColor(Theme.key_actionBarDefaultSearch), false);
+        actionBar.setSearchTextColor(getThemedColor(Theme.key_actionBarDefaultSearchPlaceholder), true);
+    }
+
     @Override
     public void onThemeColorsChanged() {
         try {
             super.onThemeColorsChanged();
+            updatePotuzhnoGramActionBarColors();
             actionBarDefaultPaint.setColor(getThemedColor(Theme.key_windowBackgroundWhite));
             cellDelegateThemeColors();
             updateExtraThemeColors();
