@@ -276,4 +276,7 @@
     <string name="RemindTodayAt">\'Нагадати сьогодні,\' HH:mm</string>
     <string name="RemindDayAt">\'Нагадати\' d MMM\',\' HH:mm</string>
     <string name="RemindDayYearAt">\'Нагадати\' d MMM yyyy\',\' HH:mm</string>
+    <string name="PotuzhnoGramStarsAndGifts">Мої Stars і подарунки</string>
+    <string name="PotuzhnoGramStarsAndGiftsInfo">Баланс та історія подарунків</string>
+    <string name="PotuzhnoGramGiftStats">Подарунків у профілі: %1$d • Продажів у завантаженій історії: %2$d</string>
 </resources>
