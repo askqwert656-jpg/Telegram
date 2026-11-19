@@ -216,8 +216,6 @@ public class StarsIntroActivity extends GradientHeaderActivity implements Notifi
     private final boolean readOnlyMode;
     private StarsController.GiftsList profileGifts;
     private TextView giftStatsTextView;
-    private StarsController.GiftsList profileGifts;
-    private TextView giftStatsTextView;
 
     public StarsIntroActivity() {
         this(false);
