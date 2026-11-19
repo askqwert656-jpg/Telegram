@@ -443,6 +443,14 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
         }
     }
 
+    private static boolean isSupportedAppLanguage(LocaleController.LocaleInfo info) {
+        if (info == null || info.shortName == null) {
+            return false;
+        }
+        String code = info.shortName.toLowerCase().replace('-', '_');
+        return "ru".equals(code) || "uk".equals(code) || "en".equals(code);
+    }
+
     private void fillLanguages() {
         final LocaleController.LocaleInfo currentLocale = LocaleController.getInstance().getCurrentLocaleInfo();
         Comparator<LocaleController.LocaleInfo> comparator = (o, o2) -> {
@@ -462,11 +470,19 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
         };
 
         sortedLanguages = new ArrayList<>();
-        unofficialLanguages = new ArrayList<>(LocaleController.getInstance().unofficialLanguages);
+        unofficialLanguages = new ArrayList<>();
+        for (LocaleController.LocaleInfo info : LocaleController.getInstance().unofficialLanguages) {
+            if (isSupportedAppLanguage(info)) {
+                unofficialLanguages.add(info);
+            }
+        }
 
         ArrayList<LocaleController.LocaleInfo> arrayList = LocaleController.getInstance().languages;
         for (int a = 0, size = arrayList.size(); a < size; a++) {
             LocaleController.LocaleInfo info = arrayList.get(a);
+            if (!isSupportedAppLanguage(info)) {
+                continue;
+            }
             if (info.serverIndex != Integer.MAX_VALUE) {
                 sortedLanguages.add(info);
             } else {
