@@ -281,7 +281,8 @@ public class FragmentSearchField extends FrameLayout implements FactorAnimator.T
 
     @Override
     public void updateColors() {
-        if (isTerminalStyle) {
+        final boolean isDark = resourcesProvider != null ? resourcesProvider.isDark() : Theme.isCurrentThemeDark();
+        if (isTerminalStyle && isDark) {
             final int textColor = Color.rgb(218, 235, 247);
             final int accentColor = Color.rgb(143, 199, 232);
             bg = Theme.createRoundRectDrawable(dp(12), Color.rgb(17, 29, 43));
@@ -307,7 +308,6 @@ public class FragmentSearchField extends FrameLayout implements FactorAnimator.T
             invalidate();
             return;
         }
-        final boolean isDark = resourcesProvider != null ? resourcesProvider.isDark() : Theme.isCurrentThemeDark();
         bg = isSectionBackground ?
             Theme.createRoundRectDrawableShadowed(dp(20), getThemedColor(Theme.key_windowBackgroundWhite)) :
             Theme.createRoundRectDrawable(dp(20), isWhiteBackground ? getThemedColor(Theme.key_windowBackgroundWhite) : getThemedColor(Theme.key_windowBackgroundWhiteBlackText, isDark ? 0.07f : 0.05f));
