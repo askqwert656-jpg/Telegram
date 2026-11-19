@@ -23,7 +23,7 @@ public class GcmPushListenerService extends FirebaseMessagingService {
         Map<String, String> data = message.getData();
         long time = message.getSentTime();
         String encryptedPayload = data.get("p");
-        android.util.Log.i("PG_PUSH_DIAG", "FCM onMessageReceived keys=" + data.keySet() + " encryptedPayloadPresent=" + !TextUtils.isEmpty(encryptedPayload) + " payloadLength=" + (encryptedPayload == null ? 0 : encryptedPayload.length()));
+        android.util.Log.i("PG_PUSH_DIAG", "FCM onMessageReceived keys=" + data.keySet() + " encryptedPayloadPresent=" + !android.text.TextUtils.isEmpty(encryptedPayload) + " payloadLength=" + (encryptedPayload == null ? 0 : encryptedPayload.length()));
 
         if (BuildVars.LOGS_ENABLED) {
             FileLog.d("FCM received data: " + data + " from: " + from);
