@@ -213,7 +213,18 @@ public class StarsIntroActivity extends GradientHeaderActivity implements Notifi
     private ButtonWithCounterView topupButton;
     private ButtonWithCounterView giftButton;
 
+    private final boolean readOnlyMode;
+    private StarsController.GiftsList profileGifts;
+    private TextView giftStatsTextView;
+    private StarsController.GiftsList profileGifts;
+    private TextView giftStatsTextView;
+
     public StarsIntroActivity() {
+        this(false);
+    }
+
+    public StarsIntroActivity(boolean readOnlyMode) {
+        this.readOnlyMode = readOnlyMode;
         setWhiteBackground(true);
     }
 
@@ -224,6 +235,10 @@ public class StarsIntroActivity extends GradientHeaderActivity implements Notifi
         NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.starTransactionsLoaded);
         NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.starSubscriptionsLoaded);
         NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.botStarsUpdated);
+        NotificationCenter.getInstance(currentAccount).addWeakObserver(this, NotificationCenter.starUserGiftsLoaded);
+        if (readOnlyMode) {
+            profileGifts = StarsController.getInstance(currentAccount).getProfileGiftsList(0);
+        }
         StarsController.getInstance(currentAccount).invalidateTransactions(true);
         StarsController.getInstance(currentAccount).invalidateSubscriptions(true);
         StarsController.getInstance(currentAccount).getOptions();
@@ -241,6 +256,7 @@ public class StarsIntroActivity extends GradientHeaderActivity implements Notifi
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.starTransactionsLoaded);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.starSubscriptionsLoaded);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.botStarsUpdated);
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.starUserGiftsLoaded);
     }
 
     private void traceTransactions(String event) {
@@ -260,6 +276,9 @@ public class StarsIntroActivity extends GradientHeaderActivity implements Notifi
     private boolean hadTransactions;
     @Override
     public void didReceivedNotification(int id, int account, Object... args) {
+        if (id == NotificationCenter.starTransactionsLoaded || id == NotificationCenter.starUserGiftsLoaded) {
+            updateGiftStats();
+        }
         if (id == NotificationCenter.starTransactionsLoaded || id == NotificationCenter.starSubscriptionsLoaded
                 || id == NotificationCenter.starOptionsLoaded) {
             traceTransactions("NOTIFICATION_" + id);
@@ -422,6 +441,14 @@ public class StarsIntroActivity extends GradientHeaderActivity implements Notifi
         ThemeBind.textColor(starBalanceTitleView, Theme.key_windowBackgroundWhiteGrayText2, resourceProvider);
         balanceLayout.addView(starBalanceTitleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 24, 0, 24, 0));
 
+        if (readOnlyMode) {
+            giftStatsTextView = new TextView(getContext());
+            giftStatsTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+            giftStatsTextView.setGravity(Gravity.CENTER);
+            ThemeBind.textColor(giftStatsTextView, Theme.key_windowBackgroundWhiteGrayText2, resourceProvider);
+            balanceLayout.addView(giftStatsTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 20, 8, 20, 0));
+        }
+
         FrameLayout buttonsLayout = new FrameLayout(getContext());
 
         oneButtonsLayout = new FrameLayout(getContext()) {
@@ -477,6 +504,9 @@ public class StarsIntroActivity extends GradientHeaderActivity implements Notifi
         twoButtonsLayout.addView(withdrawButton, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48, Gravity.CENTER, 1, 0, 0, 0, 0));
 
         balanceLayout.addView(buttonsLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.CENTER, 20, 17, 20, 0));
+        if (readOnlyMode) {
+            buttonsLayout.setVisibility(View.GONE);
+        }
 
         giftButton = new ButtonWithCounterView(getContext(), false, resourceProvider);
         giftButton.setRound();
@@ -490,8 +520,12 @@ public class StarsIntroActivity extends GradientHeaderActivity implements Notifi
             UserSelectorBottomSheet.open(UserSelectorBottomSheet.TYPE_STARS, 0, BirthdayController.getInstance(currentAccount).getState());
         });
         balanceLayout.addView(giftButton, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.CENTER, 20, 8, 20, 0));
+        if (readOnlyMode) {
+            giftButton.setVisibility(View.GONE);
+        }
 
         updateBalance();
+        updateGiftStats();
 
         if (adapter != null) {
             adapter.update(false);
@@ -516,6 +550,26 @@ public class StarsIntroActivity extends GradientHeaderActivity implements Notifi
 
         final TLRPC.TL_payments_starsRevenueStats stats = BotStarsController.getInstance(currentAccount).getStarsRevenueStats(getUserConfig().getClientUserId());
         updateButtonsLayouts(stats != null && stats.status != null && stats.status.overall_revenue.positive(), true);
+        updateGiftStats();
+    }
+
+    private void updateGiftStats() {
+        if (!readOnlyMode || giftStatsTextView == null) {
+            return;
+        }
+        final StarsController controller = StarsController.getInstance(currentAccount);
+        final int received = profileGifts == null ? 0 : profileGifts.getTotalCount();
+        int sold = 0;
+        for (TL_stars.StarsTransaction transaction : controller.transactions[StarsController.ALL_TRANSACTIONS]) {
+            if (transaction == null || transaction.refund || transaction.failed || transaction.pending) {
+                continue;
+            }
+            if (transaction.stargift_resale && transaction.amount.positive()
+                    || transaction.offer && transaction.amount.negative()) {
+                sold++;
+            }
+        }
+        giftStatsTextView.setText(LocaleController.formatString(R.string.PotuzhnoGramGiftStats, received, sold));
     }
 
     private boolean twoButtons;
