@@ -263,4 +263,7 @@
     <string name="RemindTodayAt">\'Отправить сегодня в\' HH:mm</string>
     <string name="RemindDayAt">\'Отправить\' d MMM \'в\' HH:mm</string>
     <string name="RemindDayYearAt">\'Напомнить\' d MMM yyyy \'в\' HH:mm</string>
+    <string name="PotuzhnoGramStarsAndGifts">Мои Stars и подарки</string>
+    <string name="PotuzhnoGramStarsAndGiftsInfo">Баланс и история подарков</string>
+    <string name="PotuzhnoGramGiftStats">Подарков в профиле: %1$d • Продаж в загруженной истории: %2$d</string>
 </resources>
