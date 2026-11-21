@@ -1824,6 +1824,8 @@ public class PushListenerController {
                             .addOnCompleteListener(task -> {
                                 SharedConfig.pushStringGetTimeEnd = SystemClock.elapsedRealtime();
                                 if (!task.isSuccessful()) {
+                                    Exception error = task.getException();
+                                    android.util.Log.e("PG_PUSH_DIAG", "FCM token request failed: " + (error == null ? "unknown" : error.getClass().getSimpleName() + ": " + error.getMessage()));
                                     if (BuildVars.LOGS_ENABLED) {
                                         FileLog.d("Failed to get regid");
                                     }
@@ -1832,8 +1834,11 @@ public class PushListenerController {
                                     return;
                                 }
                                 String token = task.getResult();
+                                android.util.Log.i("PG_PUSH_DIAG", "FCM token request completed tokenPresent=" + !TextUtils.isEmpty(token) + " tokenLength=" + (token == null ? 0 : token.length()));
                                 if (!TextUtils.isEmpty(token)) {
                                     PushListenerController.sendRegistrationToServer(getPushType(), token);
+                                } else {
+                                    android.util.Log.w("PG_PUSH_DIAG", "FCM token request returned an empty token");
                                 }
                             });
                 } catch (Throwable e) {
