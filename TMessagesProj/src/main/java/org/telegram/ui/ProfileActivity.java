@@ -13098,7 +13098,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 report.append("Filter: PG_PUSH_DIAG only\n\n");
 
                 File[] candidates = dir.listFiles((folder, name) ->
-                        name.endsWith(".txt") && !name.contains("_"));
+                        name.endsWith(".txt") && !name.endsWith("_mtproto.txt") && !name.endsWith("_net.txt") && !name.endsWith("_tonlib.txt"));
                 if (candidates == null) {
                     candidates = new File[0];
                 }
