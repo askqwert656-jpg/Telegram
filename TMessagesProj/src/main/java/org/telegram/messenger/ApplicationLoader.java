@@ -193,6 +193,7 @@ public class ApplicationLoader extends Application {
             return;
         }
         applicationInited = true;
+        FileLog.pushDiagnostic("application postInitApplication started");
         NativeLoader.initNativeLibs(ApplicationLoader.applicationContext);
 
         try {
