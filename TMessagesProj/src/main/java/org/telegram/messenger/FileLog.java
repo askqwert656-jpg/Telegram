@@ -358,6 +358,31 @@ public class FileLog {
         initied = true;
     }
 
+    private static final Object pushDiagnosticLock = new Object();
+
+    // Push diagnostics must be available in release builds even when regular file logging is disabled.
+    public static void pushDiagnostic(String message) {
+        try {
+            File dir = AndroidUtilities.getLogsDir();
+            if (dir == null) {
+                return;
+            }
+            if (!dir.exists() && !dir.mkdirs()) {
+                return;
+            }
+            File diagnosticFile = new File(dir, "pg_push_runtime.txt");
+            String line = System.currentTimeMillis() + " PG_PUSH_DIAG " + String.valueOf(message) + "\n";
+            synchronized (pushDiagnosticLock) {
+                try (FileOutputStream output = new FileOutputStream(diagnosticFile, true)) {
+                    output.write(line.getBytes("UTF-8"));
+                    output.flush();
+                }
+            }
+        } catch (Throwable error) {
+            Log.e(tag, "Unable to write push diagnostics", error);
+        }
+    }
+
     public static void ensureInitied() {
         getInstance().init();
     }
