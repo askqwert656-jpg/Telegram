@@ -16224,22 +16224,22 @@ public class MessagesController extends BaseController implements NotificationCe
 
     public void registerForPush(@PushListenerController.PushType int pushType, String regid) {
         if (TextUtils.isEmpty(regid)) {
-            android.util.Log.w("PG_PUSH_DIAG", "account " + currentAccount + " push registration skipped: empty token");
+            FileLog.pushDiagnostic( "account " + currentAccount + " push registration skipped: empty token");
             return;
         }
         if (registeringForPush) {
-            android.util.Log.w("PG_PUSH_DIAG", "account " + currentAccount + " push registration skipped: request already running");
+            FileLog.pushDiagnostic( "account " + currentAccount + " push registration skipped: request already running");
             return;
         }
         if (getUserConfig().getClientUserId() == 0) {
-            android.util.Log.w("PG_PUSH_DIAG", "account " + currentAccount + " push registration skipped: account not authorized");
+            FileLog.pushDiagnostic( "account " + currentAccount + " push registration skipped: account not authorized");
             return;
         }
         if (getUserConfig().registeredForPush && regid.equals(SharedConfig.pushString)) {
-            android.util.Log.i("PG_PUSH_DIAG", "account " + currentAccount + " push registration skipped: token already registered");
+            FileLog.pushDiagnostic( "account " + currentAccount + " push registration skipped: token already registered");
             return;
         }
-        android.util.Log.i("PG_PUSH_DIAG", "account " + currentAccount + " sending registerDevice type=" + pushType + " tokenLength=" + regid.length());
+        FileLog.pushDiagnostic( "account " + currentAccount + " sending registerDevice type=" + pushType + " tokenLength=" + regid.length());
         registeringForPush = true;
         lastPushRegisterSendTime = SystemClock.elapsedRealtime();
         if (SharedConfig.pushAuthKey == null) {
@@ -16264,7 +16264,7 @@ public class MessagesController extends BaseController implements NotificationCe
         }
         getConnectionsManager().sendRequest(req, (response, error) -> {
             if (response instanceof TLRPC.TL_boolTrue) {
-                android.util.Log.i("PG_PUSH_DIAG", "account " + currentAccount + " registerDevice SUCCESS");
+                FileLog.pushDiagnostic( "account " + currentAccount + " registerDevice SUCCESS");
                 if (BuildVars.LOGS_ENABLED) {
                     FileLog.d("account " + currentAccount + " registered for push, push type: " + pushType);
                 }
@@ -16274,7 +16274,7 @@ public class MessagesController extends BaseController implements NotificationCe
                 getUserConfig().saveConfig(false);
             } else {
                 String errorInfo = error == null ? "no RPC error object" : ("code=" + error.code + " text=" + error.text);
-                android.util.Log.e("PG_PUSH_DIAG", "account " + currentAccount + " registerDevice FAILED response=" + (response == null ? "null" : response.getClass().getSimpleName()) + " " + errorInfo);
+                FileLog.pushDiagnostic( "account " + currentAccount + " registerDevice FAILED response=" + (response == null ? "null" : response.getClass().getSimpleName()) + " " + errorInfo);
             }
             AndroidUtilities.runOnUIThread(() -> registeringForPush = false);
         });
