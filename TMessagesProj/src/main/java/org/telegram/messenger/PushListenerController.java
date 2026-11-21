@@ -1819,13 +1819,36 @@ public class PushListenerController {
             Utilities.globalQueue.postRunnable(() -> {
                 try {
                     SharedConfig.pushStringGetTimeStart = SystemClock.elapsedRealtime();
-                    FirebaseApp.initializeApp(ApplicationLoader.applicationContext);
+                    int gmsStatus = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(ApplicationLoader.applicationContext);
+                    FirebaseApp firebaseApp = FirebaseApp.initializeApp(ApplicationLoader.applicationContext);
+                    if (firebaseApp == null) {
+                        FileLog.pushDiagnostic("FCM FirebaseApp initialization returned null package=" + ApplicationLoader.applicationContext.getPackageName() + " gmsStatus=" + gmsStatus + " gmsError=" + GoogleApiAvailability.getInstance().getErrorString(gmsStatus));
+                        return;
+                    }
+                    com.google.firebase.FirebaseOptions firebaseOptions = firebaseApp.getOptions();
+                    FileLog.pushDiagnostic("FCM environment package=" + ApplicationLoader.applicationContext.getPackageName()
+                            + " gmsStatus=" + gmsStatus
+                            + " gmsError=" + GoogleApiAvailability.getInstance().getErrorString(gmsStatus)
+                            + " projectId=" + firebaseOptions.getProjectId()
+                            + " senderId=" + firebaseOptions.getGcmSenderId()
+                            + " appIdPresent=" + !TextUtils.isEmpty(firebaseOptions.getApplicationId()));
                     FirebaseMessaging.getInstance().getToken()
                             .addOnCompleteListener(task -> {
                                 SharedConfig.pushStringGetTimeEnd = SystemClock.elapsedRealtime();
                                 if (!task.isSuccessful()) {
                                     Exception error = task.getException();
-                                    FileLog.pushDiagnostic("FCM token request failed: " + (error == null ? "unknown" : error.getClass().getSimpleName() + ": " + error.getMessage()));
+                                    StringBuilder errorDetails = new StringBuilder();
+                                    Throwable cause = error;
+                                    int causeDepth = 0;
+                                    while (cause != null && causeDepth < 5) {
+                                        if (causeDepth > 0) {
+                                            errorDetails.append(" <- ");
+                                        }
+                                        errorDetails.append(cause.getClass().getName()).append(": ").append(cause.getMessage());
+                                        cause = cause.getCause();
+                                        causeDepth++;
+                                    }
+                                    FileLog.pushDiagnostic("FCM token request failed: " + (errorDetails.length() == 0 ? "unknown" : errorDetails.toString()));
                                     if (BuildVars.LOGS_ENABLED) {
                                         FileLog.d("Failed to get regid");
                                     }
