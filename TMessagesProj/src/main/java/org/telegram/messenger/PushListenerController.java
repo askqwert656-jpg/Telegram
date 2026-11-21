@@ -47,10 +47,10 @@ public class PushListenerController {
     private static CountDownLatch countDownLatch = new CountDownLatch(1);
 
     public static void sendRegistrationToServer(@PushType int pushType, String token) {
-        android.util.Log.i("PG_PUSH_DIAG", "registration handoff type=" + pushType + " tokenPresent=" + !TextUtils.isEmpty(token) + " tokenLength=" + (token == null ? 0 : token.length()));
+        FileLog.d("PG_PUSH_DIAG " + "registration handoff type=" + pushType + " tokenPresent=" + !TextUtils.isEmpty(token) + " tokenLength=" + (token == null ? 0 : token.length()));
         Utilities.stageQueue.postRunnable(() -> {
             ConnectionsManager.setRegId(token, pushType, SharedConfig.pushStringStatus);
-            android.util.Log.i("PG_PUSH_DIAG", "registration stageQueue tokenPresent=" + !TextUtils.isEmpty(token) + " status=" + SharedConfig.pushStringStatus);
+            FileLog.d("PG_PUSH_DIAG " + "registration stageQueue tokenPresent=" + !TextUtils.isEmpty(token) + " status=" + SharedConfig.pushStringStatus);
             if (token == null) {
                 return;
             }
@@ -97,7 +97,7 @@ public class PushListenerController {
 
     public static void processRemoteMessage(@PushType int pushType, String data, long time) {
         String tag = pushType == PUSH_TYPE_FIREBASE ? "FCM" : "HCM";
-        android.util.Log.i("PG_PUSH_DIAG", tag + " processRemoteMessage called payloadPresent=" + !TextUtils.isEmpty(data) + " payloadLength=" + (data == null ? 0 : data.length()));
+        FileLog.d("PG_PUSH_DIAG " + tag + " processRemoteMessage called payloadPresent=" + !TextUtils.isEmpty(data) + " payloadLength=" + (data == null ? 0 : data.length()));
         if (BuildVars.LOGS_ENABLED) {
             FileLog.d(tag + " PRE START PROCESSING");
         }
@@ -158,7 +158,7 @@ public class PushListenerController {
                     buffer.readBytes(strBytes, true);
                     jsonString = new String(strBytes);
                     JSONObject json = new JSONObject(jsonString);
-                    android.util.Log.i("PG_PUSH_DIAG", tag + " decrypted push loc_key=" + json.optString("loc_key", "(none)"));
+                    FileLog.d("PG_PUSH_DIAG " + tag + " decrypted push loc_key=" + json.optString("loc_key", "(none)"));
 
                     if (ApplicationLoader.applicationLoaderInstance != null && ApplicationLoader.applicationLoaderInstance.consumePush(currentAccount, json)) {
                         countDownLatch.countDown();
@@ -1768,7 +1768,7 @@ public class PushListenerController {
     }
 
     private static void onDecryptError() {
-        android.util.Log.w("PG_PUSH_DIAG", "push decrypt failed; resuming account network");
+        FileLog.d("PG_PUSH_DIAG " + "push decrypt failed; resuming account network");
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
             if (UserConfig.getInstance(a).isClientActivated()) {
                 ConnectionsManager.onInternalPushReceived(a);
@@ -1825,7 +1825,7 @@ public class PushListenerController {
                                 SharedConfig.pushStringGetTimeEnd = SystemClock.elapsedRealtime();
                                 if (!task.isSuccessful()) {
                                     Exception error = task.getException();
-                                    android.util.Log.e("PG_PUSH_DIAG", "FCM token request failed: " + (error == null ? "unknown" : error.getClass().getSimpleName() + ": " + error.getMessage()));
+                                    FileLog.d("PG_PUSH_DIAG " + "FCM token request failed: " + (error == null ? "unknown" : error.getClass().getSimpleName() + ": " + error.getMessage()));
                                     if (BuildVars.LOGS_ENABLED) {
                                         FileLog.d("Failed to get regid");
                                     }
@@ -1834,11 +1834,11 @@ public class PushListenerController {
                                     return;
                                 }
                                 String token = task.getResult();
-                                android.util.Log.i("PG_PUSH_DIAG", "FCM token request completed tokenPresent=" + !TextUtils.isEmpty(token) + " tokenLength=" + (token == null ? 0 : token.length()));
+                                FileLog.d("PG_PUSH_DIAG " + "FCM token request completed tokenPresent=" + !TextUtils.isEmpty(token) + " tokenLength=" + (token == null ? 0 : token.length()));
                                 if (!TextUtils.isEmpty(token)) {
                                     PushListenerController.sendRegistrationToServer(getPushType(), token);
                                 } else {
-                                    android.util.Log.w("PG_PUSH_DIAG", "FCM token request returned an empty token");
+                                    FileLog.d("PG_PUSH_DIAG " + "FCM token request returned an empty token");
                                 }
                             });
                 } catch (Throwable e) {
