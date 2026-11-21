@@ -327,10 +327,13 @@ import org.telegram.ui.bots.SetupEmojiStatusSheet;
 import org.telegram.ui.community.CommunitySheet;
 import org.telegram.ui.QrShare.QrShareActivity;
 
-import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.InputStreamReader;
 import java.io.FileOutputStream;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -349,8 +352,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import me.vkryl.android.animator.FactorAnimator;
 import me.vkryl.android.animator.BoolAnimator;
@@ -13077,118 +13078,104 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (activity == null) {
             return;
         }
-        AlertDialog progressDialog = new AlertDialog(activity, AlertDialog.ALERT_TYPE_SPINNER);
+        final Activity hostActivity = activity;
+        AlertDialog progressDialog = new AlertDialog(hostActivity, AlertDialog.ALERT_TYPE_SPINNER);
         progressDialog.setCanCancel(false);
         progressDialog.show();
         Utilities.globalQueue.postRunnable(() -> {
+            File reportFile = null;
+            boolean success = false;
             try {
                 File dir = AndroidUtilities.getLogsDir();
                 if (dir == null) {
-                    AndroidUtilities.runOnUIThread(progressDialog::dismiss);
-                    return;
+                    throw new IOException("Logs directory is unavailable");
                 }
 
-                File zipFile = new File(dir, "logs.zip");
-                if (zipFile.exists()) {
-                    zipFile.delete();
+                reportFile = new File(dir, "pg_push_diagnostics.txt");
+                StringBuilder report = new StringBuilder();
+                report.append("PotuzhnoGram push diagnostics\n");
+                report.append("Generated: ").append(new java.util.Date()).append("\n");
+                report.append("Filter: PG_PUSH_DIAG only\n\n");
+
+                File[] candidates = dir.listFiles((folder, name) ->
+                        name.endsWith(".txt") && !name.contains("_"));
+                if (candidates == null) {
+                    candidates = new File[0];
                 }
+                java.util.Arrays.sort(candidates, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
 
-                ArrayList<File> files = new ArrayList<>();
-
-                File[] logFiles = dir.listFiles();
-                for (File f : logFiles) {
-                    files.add(f);
-                }
-
-                File filesDir = ApplicationLoader.getFilesDirFixed();
-                filesDir = new File(filesDir, "malformed_database/");
-                if (filesDir.exists() && filesDir.isDirectory()) {
-                    File[] malformedDatabaseFiles = filesDir.listFiles();
-                    for (File file : malformedDatabaseFiles) {
-                        files.add(file);
+                int matchedLines = 0;
+                long totalRead = 0;
+                final long maxTotalBytes = 2L * 1024L * 1024L;
+                final int maxMatches = 500;
+                for (File file : candidates) {
+                    if (matchedLines >= maxMatches || totalRead >= maxTotalBytes) {
+                        break;
                     }
-                }
-
-                boolean[] finished = new boolean[1];
-                long currentDate = System.currentTimeMillis();
-
-                BufferedInputStream origin = null;
-                ZipOutputStream out = null;
-                try {
-                    FileOutputStream dest = new FileOutputStream(zipFile);
-                    out = new ZipOutputStream(new BufferedOutputStream(dest));
-                    byte[] data = new byte[1024 * 64];
-
-                    for (int i = 0; i < files.size(); i++) {
-                        File file = files.get(i);
-                        if (!file.getName().contains("cache4") && (last || file.getName().contains("_mtproto")) && (currentDate - file.lastModified()) > 24 * 60 * 60 * 1000) {
-                            continue;
-                        }
-                        if (!file.exists() || file.isDirectory()) {
-                            continue;
-                        }
-                        FileInputStream fi = new FileInputStream(file);
-                        origin = new BufferedInputStream(fi, data.length);
-
-                        ZipEntry entry = new ZipEntry(file.getName());
-                        out.putNextEntry(entry);
-                        int count;
-                        while ((count = origin.read(data, 0, data.length)) != -1) {
-                            out.write(data, 0, count);
-                        }
-                        origin.close();
-                        origin = null;
+                    if (!file.isFile()) {
+                        continue;
                     }
-                    finished[0] = true;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    if (origin != null) {
-                        origin.close();
+                    long fileLimit = Math.min(file.length(), 512L * 1024L);
+                    if (fileLimit <= 0) {
+                        continue;
                     }
-                    if (out != null) {
-                        out.close();
-                    }
-                }
-
-                AndroidUtilities.runOnUIThread(() -> {
-                    try {
-                        progressDialog.dismiss();
-                    } catch (Exception ignore) {
-
-                    }
-                    if (finished[0]) {
-                        Uri uri;
-                        if (Build.VERSION.SDK_INT >= 24) {
-                            uri = FileProvider.getUriForFile(activity, ApplicationLoader.getApplicationId() + ".provider", zipFile);
-                        } else {
-                            uri = Uri.fromFile(zipFile);
-                        }
-
-                        Intent i = new Intent(Intent.ACTION_SEND);
-                        if (Build.VERSION.SDK_INT >= 24) {
-                            i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        }
-                        i.setType("message/rfc822");
-                        i.putExtra(Intent.EXTRA_EMAIL, "");
-                        i.putExtra(Intent.EXTRA_SUBJECT, "Logs from " + LocaleController.getInstance().getFormatterStats().format(System.currentTimeMillis()));
-                        i.putExtra(Intent.EXTRA_STREAM, uri);
-                        if (activity != null) {
-                            try {
-                                activity.startActivityForResult(Intent.createChooser(i, "Select email application."), 500);
-                            } catch (Exception e) {
-                                FileLog.e(e);
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"))) {
+                        String line;
+                        long fileRead = 0;
+                        while ((line = reader.readLine()) != null && fileRead < fileLimit && totalRead < maxTotalBytes) {
+                            fileRead += line.length() + 1;
+                            totalRead += line.length() + 1;
+                            if (line.contains("PG_PUSH_DIAG")) {
+                                report.append(line).append('\n');
+                                matchedLines++;
+                                if (matchedLines >= maxMatches) {
+                                    break;
+                                }
                             }
                         }
-                    } else {
-                        if (activity != null) {
-                            Toast.makeText(activity, LocaleController.getString(R.string.ErrorOccurred), Toast.LENGTH_SHORT).show();
-                        }
                     }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
+                }
+
+                if (matchedLines == 0) {
+                    report.append("No PG_PUSH_DIAG entries found.\n");
+                }
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(reportFile, false))) {
+                    writer.write(report.toString());
+                }
+                success = true;
+            } catch (Throwable e) {
+                FileLog.e(e);
             }
+
+            final File finalReportFile = reportFile;
+            final boolean finalSuccess = success;
+            AndroidUtilities.runOnUIThread(() -> {
+                try {
+                    progressDialog.dismiss();
+                } catch (Exception ignore) {
+                }
+                if (!finalSuccess || finalReportFile == null || !finalReportFile.exists()) {
+                    Toast.makeText(hostActivity, LocaleController.getString(R.string.ErrorOccurred), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Uri uri;
+                if (Build.VERSION.SDK_INT >= 24) {
+                    uri = FileProvider.getUriForFile(hostActivity, ApplicationLoader.getApplicationId() + ".provider", finalReportFile);
+                } else {
+                    uri = Uri.fromFile(finalReportFile);
+                }
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+                shareIntent.putExtra(Intent.EXTRA_SUBJECT, "PotuzhnoGram push diagnostics");
+                try {
+                    hostActivity.startActivity(Intent.createChooser(shareIntent, "Share diagnostic report"));
+                } catch (Exception e) {
+                    FileLog.e(e);
+                    Toast.makeText(hostActivity, LocaleController.getString(R.string.ErrorOccurred), Toast.LENGTH_SHORT).show();
+                }
+            });
         });
     }
 
