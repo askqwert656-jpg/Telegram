@@ -785,6 +785,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         items.add(SettingCell.Factory.of(9, IconBackgroundColors.ORANGE_DEEP.top, IconBackgroundColors.ORANGE_DEEP.bottom, R.drawable.settings_power, getString(R.string.SettingsPowerSaving), getString(R.string.SettingsPowerSavingInfo)));
         items.add(SettingCell.Factory.of(10, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_language, getString(R.string.SettingsLanguage), LocaleController.getCurrentLanguageName()));
         items.add(SettingCell.Factory.of(12, 0xFFFFC04D, 0xFFE99A24, R.drawable.menu_stars_gift, getString(R.string.PotuzhnoGramStarsAndGifts), getString(R.string.PotuzhnoGramStarsAndGiftsInfo)));
+        items.add(SettingCell.Factory.of(28, 0xFF3988D6, 0xFF2868B2, R.drawable.settings_data, "Диагностический отчёт", "Собрать технические журналы для проверки ошибок"));
 
         items.add(UItem.asShadow(null));
         StarsController.getInstance(currentAccount, true).getBalance();
@@ -913,6 +914,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 UserSelectorBottomSheet.open(0, BirthdayController.getInstance(UserConfig.selectedAccount).getState());
                 break;
 
+            case 28:
+                ProfileActivity.sendLogs(getParentActivity(), false);
+                break;
             case 20:
                 ProfileActivity.sendLogs(getParentActivity(), false);
                 break;
