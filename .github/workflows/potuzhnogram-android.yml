@@ -48,7 +48,14 @@ jobs:
             echo "ERROR: Android SDK components could not be installed after 3 attempts."
             exit 1
           fi
+          set +o pipefail
           yes | sdkmanager --licenses
+          license_status=${PIPESTATUS[1]}
+          set -o pipefail
+          if [[ "$license_status" -ne 0 ]]; then
+            echo "ERROR: Android SDK license acceptance failed."
+            exit "$license_status"
+          fi
 
       - name: Configure Telegram API credentials
         env:
