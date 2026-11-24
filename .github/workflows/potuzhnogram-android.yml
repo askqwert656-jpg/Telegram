@@ -90,6 +90,12 @@ jobs:
             exit 1
           fi
           echo "Signing certificate verified."
+          ACTUAL_CERT_SHA1="$(keytool -list -v -keystore "$KEYSTORE" -alias potuzhogram -storepass "$STORE_PASSWORD" 2>/dev/null | awk '/SHA1:/{print $2; exit}' | tr -d ':')"
+          if [[ -z "$ACTUAL_CERT_SHA1" ]]; then
+            echo "ERROR: Could not read signing certificate SHA-1."
+            exit 1
+          fi
+          echo "Release signing certificate SHA-1: $ACTUAL_CERT_SHA1"
 
       - name: Build signed PotuzhnoGram release APK
         env:
