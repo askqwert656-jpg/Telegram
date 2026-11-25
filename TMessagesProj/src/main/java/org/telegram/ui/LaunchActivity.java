@@ -655,6 +655,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         checkLayout();
         checkSystemBarColors();
         handleIntent(getIntent(), false, savedInstanceState != null, false, null, true, true);
+        openFolder42Notification(getIntent());
         try {
             String os1 = Build.DISPLAY;
             String os2 = Build.USER;
@@ -6300,6 +6301,24 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         navigateToPremiumGiftCallback = val;
     }
 
+    private void openFolder42Notification(Intent intent) {
+        if (intent == null || !intent.getBooleanExtra("folder42_open", false)) {
+            return;
+        }
+        long dialogId = intent.getLongExtra("folder42_dialog_id", 0);
+        long messageId = intent.getLongExtra("folder42_message_id", 0);
+        intent.removeExtra("folder42_open");
+        intent.removeExtra("folder42_dialog_id");
+        intent.removeExtra("folder42_message_id");
+        if (dialogId == 0) {
+            getActionBarLayout().presentFragment(new Folder42Activity());
+            return;
+        }
+        String chatId = String.valueOf(dialogId);
+        String title = getFolder42DialogTitle(dialogId, currentAccount);
+        getActionBarLayout().presentFragment(new Folder42ChatActivity(chatId, title, messageId));
+    }
+
     @Override
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -6308,6 +6327,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         invalidateTabletMode();
         checkLayout();
         handleIntent(intent, true, false, false, null, true, true);
+        openFolder42Notification(intent);
     }
 
     public void onNewIntent(Intent intent, Browser.Progress progress) {
