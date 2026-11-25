@@ -890,6 +890,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
             case VIEW_TYPE_FOLDER42: {
                 TextCell cell = new TextCell(mContext);
                 cell.setTextAndIcon("Папка № 42", R.drawable.folder42, true);
+                cell.getImageView().clearColorFilter();
                 view = cell;
                 break;
             }
@@ -934,7 +935,9 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int i) {
         switch (holder.getItemViewType()) {
             case VIEW_TYPE_FOLDER42: {
-                ((TextCell) holder.itemView).setTextAndIcon("Папка № 42", R.drawable.folder42, true);
+                TextCell cell = (TextCell) holder.itemView;
+                cell.setTextAndIcon("Папка № 42", R.drawable.folder42, true);
+                cell.getImageView().clearColorFilter();
                 break;
             }
             case VIEW_TYPE_FORWARD_TO_STORIES_CELL: {
