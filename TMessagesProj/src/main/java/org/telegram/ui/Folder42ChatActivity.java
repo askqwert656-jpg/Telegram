@@ -115,7 +115,7 @@ public class Folder42ChatActivity extends BaseFragment {
                 StringBuilder history = new StringBuilder("Сохранённый текст: ").append(message.text);
                 if (edits != null) {
                     for (MessageEditEntity edit : edits) {
-                        history.append("\n\nБыло: ").append(edit.previousText).append("\nСтало: ").append(edit.newText);
+                        history.append("\n\nИзменено: ").append(DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(edit.editedAt))).append("\nБыло: ").append(edit.previousText).append("\nСтало: ").append(edit.newText);
                     }
                 }
                 if (message.deletedAt != null) history.append("\n\nСообщение удалено.");
