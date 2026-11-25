@@ -118,6 +118,10 @@ public final class Folder42ArchiveManager {
         final String safeTitle = TextUtils.isEmpty(chatTitle) ? "Переписка " + chatId : chatTitle;
         executor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
+            ArchivedMessageEntity existing = db.folder42Dao().getMessage(chatId, messageId);
+            if (existing != null && existing.deletedAt != null) {
+                return;
+            }
             long eventTime = deletedAt > 0 ? deletedAt : System.currentTimeMillis();
             int updated = db.folder42Dao().markMessageDeleted(chatId, messageId, eventTime);
             if (updated == 0) {
