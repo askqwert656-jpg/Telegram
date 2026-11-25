@@ -4,20 +4,35 @@ import android.content.Context;
 import android.graphics.Typeface;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.tgarchive.database.ArchivedChatEntity;
+import com.example.tgarchive.database.Folder42Database;
+
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.LayoutHelper;
 
-/**
- * Initial screen for the independent local Folder 42 archive.
- * Telegram's built-in archive remains a separate feature.
- */
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/** Independent chat list for the local Folder 42 archive. */
 public class Folder42Activity extends BaseFragment {
+    private final ExecutorService databaseExecutor = Executors.newSingleThreadExecutor();
+    private final ArrayList<ArchivedChatEntity> chats = new ArrayList<>();
+    private ChatAdapter adapter;
+    private TextView emptyView;
 
     @Override
     public View createView(Context context) {
@@ -27,35 +42,96 @@ public class Folder42Activity extends BaseFragment {
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
-                if (id == -1) {
-                    finishFragment();
-                }
+                if (id == -1) finishFragment();
             }
         });
 
-        FrameLayout layout = new FrameLayout(context);
-        layout.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+        FrameLayout root = new FrameLayout(context);
+        root.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
 
-        TextView title = new TextView(context);
-        title.setText("Папка № 42");
-        title.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        title.setTextSize(20);
-        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
+        RecyclerView list = new RecyclerView(context);
+        list.setLayoutManager(new LinearLayoutManager(context));
+        adapter = new ChatAdapter();
+        list.setAdapter(adapter);
+        root.addView(list, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
-        TextView description = new TextView(context);
-        description.setText("Отдельный архив PotuzhnoGram. Здесь будут отображаться выбранные переписки и сохранённая история изменений.");
-        description.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
-        description.setTextSize(14);
-        description.setGravity(Gravity.CENTER);
-        description.setPadding(0, 0, 0, 0);
+        emptyView = new TextView(context);
+        emptyView.setText("Здесь будут отдельные переписки.\nДобавь чат в Папку № 42, чтобы он появился в этом списке.");
+        emptyView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+        emptyView.setTextSize(15);
+        emptyView.setGravity(Gravity.CENTER);
+        emptyView.setPadding(AndroidUtilities.dp(32), AndroidUtilities.dp(24), AndroidUtilities.dp(32), AndroidUtilities.dp(24));
+        root.addView(emptyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        emptyView.setVisibility(View.GONE);
 
-        FrameLayout content = new FrameLayout(context);
-        content.addView(title, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP));
-        content.addView(description, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 20, 48, 20, 0));
-        layout.addView(content, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER, 24, 24, 24, 24));
-
-        fragmentView = layout;
+        fragmentView = root;
+        loadChats();
         return fragmentView;
+    }
+
+    private void loadChats() {
+        databaseExecutor.execute(() -> {
+            List<ArchivedChatEntity> result = Folder42Database.getInstance(getParentActivity()).folder42Dao().getChats();
+            AndroidUtilities.runOnUIThread(() -> {
+                if (adapter == null || fragmentView == null) return;
+                chats.clear();
+                if (result != null) chats.addAll(result);
+                adapter.notifyDataSetChanged();
+                if (emptyView != null) emptyView.setVisibility(chats.isEmpty() ? View.VISIBLE : View.GONE);
+            });
+        });
+    }
+
+    @Override
+    public void onFragmentDestroy() {
+        super.onFragmentDestroy();
+        databaseExecutor.shutdown();
+        adapter = null;
+    }
+
+    private class ChatAdapter extends RecyclerView.Adapter<ChatHolder> {
+        @Override
+        public ChatHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            LinearLayout row = new LinearLayout(parent.getContext());
+            row.setOrientation(LinearLayout.VERTICAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(10), AndroidUtilities.dp(20), AndroidUtilities.dp(10));
+            TextView title = new TextView(parent.getContext());
+            title.setTextSize(16);
+            title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            title.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+            row.addView(title, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(25)));
+            TextView subtitle = new TextView(parent.getContext());
+            subtitle.setTextSize(13);
+            subtitle.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+            row.addView(subtitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(21)));
+            View divider = new View(parent.getContext());
+            divider.setBackgroundColor(Theme.getColor(Theme.key_divider));
+            row.addView(divider, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(1)));
+            return new ChatHolder(row, title, subtitle);
+        }
+
+        @Override
+        public void onBindViewHolder(ChatHolder holder, int position) {
+            ArchivedChatEntity chat = chats.get(position);
+            holder.title.setText(chat.title);
+            holder.subtitle.setText(chat.chatType == 2 ? "Канал" : chat.chatType == 1 ? "Группа" : "Личная переписка");
+            holder.itemView.setOnClickListener(v -> presentFragment(new Folder42ChatActivity(chat.chatId, chat.title)));
+        }
+
+        @Override
+        public int getItemCount() {
+            return chats.size();
+        }
+    }
+
+    private static class ChatHolder extends RecyclerView.ViewHolder {
+        final TextView title;
+        final TextView subtitle;
+        ChatHolder(View itemView, TextView title, TextView subtitle) {
+            super(itemView);
+            this.title = title;
+            this.subtitle = subtitle;
+        }
     }
 }
