@@ -22,7 +22,7 @@ public interface Folder42Dao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     long insertEdit(MessageEditEntity edit);
 
-    @Query("SELECT * FROM folder42_chats ORDER BY added_at DESC")
+    @Query("SELECT * FROM folder42_chats WHERE is_active = 1 ORDER BY added_at DESC")
     List<ArchivedChatEntity> getChats();
 
     @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId ORDER BY date DESC")
@@ -30,6 +30,12 @@ public interface Folder42Dao {
 
     @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId AND message_id = :messageId LIMIT 1")
     ArchivedMessageEntity getMessage(String chatId, long messageId);
+
+    @Query("SELECT * FROM folder42_messages WHERE message_id = :messageId")
+    List<ArchivedMessageEntity> getMessagesByMessageId(long messageId);
+
+    @Query("UPDATE folder42_chats SET is_active = 1, title = :title, chat_type = :chatType, last_synced_at = :updatedAt WHERE chat_id = :chatId")
+    int activateChat(String chatId, String title, int chatType, long updatedAt);
 
     @Query("UPDATE folder42_messages SET text = :text, edited_at = :editedAt WHERE chat_id = :chatId AND message_id = :messageId")
     int updateMessageText(String chatId, long messageId, String text, long editedAt);
