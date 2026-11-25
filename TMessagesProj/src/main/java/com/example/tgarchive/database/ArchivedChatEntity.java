@@ -26,11 +26,19 @@ public class ArchivedChatEntity {
     @ColumnInfo(name = "added_at")
     public long addedAt;
 
+    @ColumnInfo(name = "is_active")
+    public boolean isActive = true;
+
     public ArchivedChatEntity(@NonNull String chatId, @NonNull String title, int chatType, long lastSyncedAt, long addedAt) {
+        this(chatId, title, chatType, lastSyncedAt, addedAt, true);
+    }
+
+    public ArchivedChatEntity(@NonNull String chatId, @NonNull String title, int chatType, long lastSyncedAt, long addedAt, boolean isActive) {
         this.chatId = chatId;
         this.title = title;
         this.chatType = chatType;
         this.lastSyncedAt = lastSyncedAt;
         this.addedAt = addedAt;
+        this.isActive = isActive;
     }
 }
