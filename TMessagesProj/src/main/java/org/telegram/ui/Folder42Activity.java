@@ -124,7 +124,7 @@ public class Folder42Activity extends BaseFragment {
                 final String savedTitle = title;
                 final int savedType = chatType;
                 databaseExecutor.execute(() -> {
-                    Folder42Database.getInstance(getParentActivity()).folder42Dao().insertChat(
+                    Folder42Database.getInstance(getParentActivity()).folder42Dao().insertOrUpdateChat(
                             new ArchivedChatEntity(chatId, savedTitle, savedType, 0, System.currentTimeMillis())
                     );
                     AndroidUtilities.runOnUIThread(this::loadChats);
