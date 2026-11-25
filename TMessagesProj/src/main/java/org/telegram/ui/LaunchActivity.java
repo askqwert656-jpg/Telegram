@@ -7504,7 +7504,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     for (MessageObject message : messages) {
                         if (message != null && message.messageOwner != null) {
                             Folder42ArchiveManager.recordEdit(dialogId, title, chatType,
-                                    message.getId(), message.messageOwner.message, System.currentTimeMillis());
+                                    message.getId(), message.messageOwner.message, message.messageOwner.edit_date * 1000L);
                         }
                     }
                 }
@@ -7517,7 +7517,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 if (ids != null) {
                     for (Integer messageId : ids) {
                         if (messageId != null) {
-                            Folder42ArchiveManager.recordDeleteByMessageId(messageId, channelId);
+                            long dialogId = channelId == 0 ? 0 : -channelId;
+                            String title = dialogId == 0 ? "" : getFolder42DialogTitle(dialogId, account);
+                            int chatType = dialogId < 0 ? 1 : 0;
+                            Folder42ArchiveManager.recordDeleteByMessageId(messageId, channelId, title, chatType);
                         }
                     }
                 }
