@@ -888,10 +888,10 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
                 break;
             }
             case VIEW_TYPE_FOLDER42: {
-                TextCell cell = new TextCell(mContext);
-                cell.setTextAndIcon("Папка № 42", R.drawable.folder42, true);
-                cell.getImageView().clearColorFilter();
-                view = cell;
+                TextCell folder42Cell = new TextCell(mContext);
+                folder42Cell.setTextAndIcon("Папка № 42", R.drawable.folder42, true);
+                folder42Cell.getImageView().clearColorFilter();
+                view = folder42Cell;
                 break;
             }
             case VIEW_TYPE_TEXT:
