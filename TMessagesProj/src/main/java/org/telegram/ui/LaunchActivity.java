@@ -1373,7 +1373,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             .add(NotificationCenter.currentUserShowLimitReachedDialog)
             .add(NotificationCenter.currentUserPremiumStatusChanged)
             .add(NotificationCenter.chatSwitchedForum)
-            .add(NotificationCenter.guardBotDecisionResult);
+            .add(NotificationCenter.guardBotDecisionResult)
+            .add(NotificationCenter.didReceiveNewMessages)
+            .add(NotificationCenter.messagesDeleted)
+            .add(NotificationCenter.replaceMessagesObjects);
     }
 
     private boolean isTabletSplitMode() {
@@ -7437,9 +7440,70 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         super.onMultiWindowModeChanged(isInMultiWindowMode);
     }
 
+    private String getFolder42DialogTitle(long dialogId, int account) {
+        if (dialogId > 0) {
+            TLRPC.User user = MessagesController.getInstance(account).getUser(dialogId);
+            if (user != null) {
+                return UserObject.getUserName(user);
+            }
+        } else if (dialogId < 0) {
+            TLRPC.Chat chat = MessagesController.getInstance(account).getChat(-dialogId);
+            if (chat != null && chat.title != null && !chat.title.isEmpty()) {
+                return chat.title;
+            }
+        }
+        return "Переписка " + dialogId;
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public void didReceivedNotification(int id, final int account, Object... args) {
+        if (id == NotificationCenter.didReceiveNewMessages) {
+            if (args.length >= 3 && !(Boolean) args[2]) {
+                long dialogId = (Long) args[0];
+                ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
+                String title = getFolder42DialogTitle(dialogId, account);
+                int chatType = dialogId > 0 ? 0 : 1;
+                if (messages != null) {
+                    for (MessageObject message : messages) {
+                        if (message != null && message.messageOwner != null) {
+                            Folder42ArchiveManager.saveMessage(dialogId, title, chatType,
+                                    message.getId(), 0, message.messageOwner.message, message.messageOwner.date);
+                        }
+                    }
+                }
+                return;
+            }
+        } else if (id == NotificationCenter.replaceMessagesObjects) {
+            if (args.length >= 2) {
+                long dialogId = (Long) args[0];
+                ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
+                String title = getFolder42DialogTitle(dialogId, account);
+                int chatType = dialogId > 0 ? 0 : 1;
+                if (messages != null) {
+                    for (MessageObject message : messages) {
+                        if (message != null && message.messageOwner != null) {
+                            Folder42ArchiveManager.recordEdit(dialogId, title, chatType,
+                                    message.getId(), message.messageOwner.message, System.currentTimeMillis());
+                        }
+                    }
+                }
+                return;
+            }
+        } else if (id == NotificationCenter.messagesDeleted) {
+            if (args.length >= 3 && !(Boolean) args[2]) {
+                ArrayList<Integer> ids = (ArrayList<Integer>) args[0];
+                long channelId = (Long) args[1];
+                if (ids != null) {
+                    for (Integer messageId : ids) {
+                        if (messageId != null) {
+                            Folder42ArchiveManager.recordDeleteByMessageId(messageId, channelId);
+                        }
+                    }
+                }
+                return;
+            }
+        }
         if (id == NotificationCenter.appDidLogout) {
             switchToAvailableAccountOrLogout();
         } else if (id == NotificationCenter.openBoostForUsersDialog) {
