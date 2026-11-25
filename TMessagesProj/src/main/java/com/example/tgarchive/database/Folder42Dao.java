@@ -9,6 +9,9 @@ import java.util.List;
 
 @Dao
 public interface Folder42Dao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    long insertOrUpdateChat(ArchivedChatEntity chat);
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     long insertChat(ArchivedChatEntity chat);
 
@@ -23,6 +26,15 @@ public interface Folder42Dao {
 
     @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId ORDER BY date DESC")
     List<ArchivedMessageEntity> getMessages(String chatId);
+
+    @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId AND message_id = :messageId LIMIT 1")
+    ArchivedMessageEntity getMessage(String chatId, long messageId);
+
+    @Query("UPDATE folder42_messages SET text = :text, edited_at = :editedAt WHERE chat_id = :chatId AND message_id = :messageId")
+    int updateMessageText(String chatId, long messageId, String text, long editedAt);
+
+    @Query("UPDATE folder42_messages SET deleted_at = :deletedAt WHERE chat_id = :chatId AND message_id = :messageId")
+    int markMessageDeleted(String chatId, long messageId, long deletedAt);
 
     @Query("SELECT * FROM folder42_message_edits WHERE message_record_id = :messageRecordId ORDER BY edited_at ASC")
     List<MessageEditEntity> getEdits(String messageRecordId);
