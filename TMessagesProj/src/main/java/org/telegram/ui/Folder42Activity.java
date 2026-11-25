@@ -57,10 +57,12 @@ public class Folder42Activity extends BaseFragment {
             }
         });
         ActionBarMenu menu = actionBar.createMenu();
-        menu.addItem(1, R.drawable.msg_add).setContentDescription("Добавить переписку")
-                .setOnClickListener(v -> openChatPicker());
-        menu.addItem(2, R.drawable.msg_notifications).setContentDescription("Уведомления Папки № 42")
-                .setOnClickListener(v -> {
+        org.telegram.ui.ActionBar.ActionBarMenuItem addChatItem = menu.addItem(1, R.drawable.msg_add);
+        addChatItem.setContentDescription("Добавить переписку");
+        addChatItem.setOnClickListener(v -> openChatPicker());
+        org.telegram.ui.ActionBar.ActionBarMenuItem notificationsItem = menu.addItem(2, R.drawable.msg_notifications);
+        notificationsItem.setContentDescription("Уведомления Папки № 42");
+        notificationsItem.setOnClickListener(v -> {
                     boolean enabled = !Folder42Notifications.areEnabled(context);
                     Folder42Notifications.setEnabled(context, enabled);
                     if (enabled && Build.VERSION.SDK_INT >= 33 &&
