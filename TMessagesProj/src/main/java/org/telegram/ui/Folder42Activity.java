@@ -86,7 +86,7 @@ public class Folder42Activity extends BaseFragment {
         root.addView(list, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         emptyView = new TextView(context);
-        emptyView.setText("Здесь будут отдельные переписки.\nДобавь чат в Папку № 42, чтобы он появился в этом списке.");
+        emptyView.setText("Переписки появятся здесь автоматически после редактирования или удаления сообщений.\nМожно также добавить чат вручную.");
         emptyView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
         emptyView.setTextSize(15);
         emptyView.setGravity(Gravity.CENTER);
