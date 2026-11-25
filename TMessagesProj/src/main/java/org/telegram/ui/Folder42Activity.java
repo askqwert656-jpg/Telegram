@@ -1,6 +1,9 @@
 package org.telegram.ui;
 
 import android.content.Context;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.graphics.Typeface;
 import android.view.Gravity;
 import android.view.View;
@@ -10,6 +13,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -58,6 +63,12 @@ public class Folder42Activity extends BaseFragment {
                 .setOnClickListener(v -> {
                     boolean enabled = !Folder42Notifications.areEnabled(context);
                     Folder42Notifications.setEnabled(context, enabled);
+                    if (enabled && Build.VERSION.SDK_INT >= 33 &&
+                            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED &&
+                            getParentActivity() != null) {
+                        ActivityCompat.requestPermissions(getParentActivity(),
+                                new String[]{Manifest.permission.POST_NOTIFICATIONS}, 42042);
+                    }
                     Toast.makeText(context, enabled ? "Уведомления Папки № 42 включены" : "Уведомления Папки № 42 отключены", Toast.LENGTH_SHORT).show();
                 });
 
