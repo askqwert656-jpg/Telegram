@@ -6,6 +6,8 @@ import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 /**
  * Private local database for Folder 42. No destructive migration fallback is configured:
@@ -13,10 +15,16 @@ import androidx.room.RoomDatabase;
  */
 @Database(
     entities = {ArchivedChatEntity.class, ArchivedMessageEntity.class, MessageEditEntity.class},
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 public abstract class Folder42Database extends RoomDatabase {
+    private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE folder42_chats ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1");
+        }
+    };
     private static volatile Folder42Database INSTANCE;
 
     public abstract Folder42Dao folder42Dao();
@@ -31,7 +39,7 @@ public abstract class Folder42Database extends RoomDatabase {
                         context.getApplicationContext(),
                         Folder42Database.class,
                         "potuzhnogram_folder_42.db"
-                    ).build();
+                    ).addMigrations(MIGRATION_1_2).build();
                     INSTANCE = instance;
                 }
             }
