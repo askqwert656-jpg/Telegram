@@ -28,6 +28,18 @@ public final class Folder42Notifications {
         return preferences(context).getBoolean(KEY_ENABLED, true);
     }
 
+    public static boolean shouldRequestPermission(Context context) {
+        if (Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            return false;
+        }
+        SharedPreferences prefs = preferences(context);
+        if (prefs.getBoolean("permission_requested", false)) {
+            return false;
+        }
+        prefs.edit().putBoolean("permission_requested", true).apply();
+        return true;
+    }
+
     public static void setEnabled(Context context, boolean enabled) {
         preferences(context).edit().putBoolean(KEY_ENABLED, enabled).apply();
     }
