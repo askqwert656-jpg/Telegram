@@ -152,7 +152,7 @@ public class Folder42ChatActivity extends BaseFragment {
             ArchivedMessageEntity message = messages.get(position);
             String body = message.text;
             if (message.mediaMetadata != null && !message.mediaMetadata.isEmpty()) {
-                body = (body == null || body.isEmpty() ? "" : body + "\\n") + "[Медиа: " + message.mediaMetadata + "]";
+                body = (body == null || body.isEmpty() ? "" : body + "\n") + "[Медиа: " + message.mediaMetadata + "]";
             }
             holder.body.setText(body);
             String date = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(message.date * 1000L));
