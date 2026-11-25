@@ -7497,7 +7497,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     for (MessageObject message : messages) {
                         if (message != null && message.messageOwner != null) {
                             Folder42ArchiveManager.saveMessage(dialogId, title, chatType,
-                                    message.getId(), 0, message.messageOwner.message, message.messageOwner.date);
+                                    message.getId(), 0, message.messageOwner.message, message.messageOwner.date,
+                                    message.messageOwner.media == null ? null : message.messageOwner.media.getClass().getSimpleName());
                         }
                     }
                 }
