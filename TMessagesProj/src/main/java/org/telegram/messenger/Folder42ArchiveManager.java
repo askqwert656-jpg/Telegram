@@ -31,7 +31,7 @@ public final class Folder42ArchiveManager {
         executor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
             db.runInTransaction(() -> {
-                db.folder42Dao().insertOrUpdateChat(new ArchivedChatEntity(
+                db.folder42Dao().insertChat(new ArchivedChatEntity(
                         chatId, safeTitle, chatType, System.currentTimeMillis(), System.currentTimeMillis(), false));
                 db.folder42Dao().insertMessage(new ArchivedMessageEntity(
                         chatId + ":" + messageId, chatId, messageId, senderId, safeText,
