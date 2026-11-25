@@ -25,6 +25,9 @@ public interface Folder42Dao {
     @Query("SELECT * FROM folder42_chats WHERE is_active = 1 ORDER BY added_at DESC")
     List<ArchivedChatEntity> getChats();
 
+    @Query("SELECT * FROM folder42_chats WHERE chat_id = :chatId LIMIT 1")
+    ArchivedChatEntity getChat(String chatId);
+
     @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId ORDER BY date DESC")
     List<ArchivedMessageEntity> getMessages(String chatId);
 
