@@ -111,7 +111,8 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
             VIEW_TYPE_GRAY_SECTION = 20,
             VIEW_TYPE_FORWARD_TO_STORIES_CELL = 21,
             VIEW_TYPE_HEADER_3 = 22,
-            VIEW_TYPE_DIALOG_COMMUNITY = 23;
+            VIEW_TYPE_DIALOG_COMMUNITY = 23,
+            VIEW_TYPE_FOLDER42 = 24;
 
     private Context mContext;
     private ArchiveHintCell archiveHintCell;
@@ -886,6 +887,12 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
                 };
                 break;
             }
+            case VIEW_TYPE_FOLDER42: {
+                TextCell cell = new TextCell(mContext);
+                cell.setTextAndIcon("Папка № 42", R.drawable.folder42, true);
+                view = cell;
+                break;
+            }
             case VIEW_TYPE_TEXT:
             default: {
                 view = new TextCell(mContext);
@@ -926,6 +933,10 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int i) {
         switch (holder.getItemViewType()) {
+            case VIEW_TYPE_FOLDER42: {
+                ((TextCell) holder.itemView).setTextAndIcon("Папка № 42", R.drawable.folder42, true);
+                break;
+            }
             case VIEW_TYPE_FORWARD_TO_STORIES_CELL: {
                 TLRPC.Dialog nextDialog = (TLRPC.Dialog) getItem(i + 1);
 
@@ -1815,11 +1826,19 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
         }
 
         if (!stopUpdate) {
+            boolean showFolder42 = dialogsType == DialogsActivity.DIALOGS_TYPE_DEFAULT && folderId == 0 && !isOnlySelect && communityId == 0;
+            boolean archiveAtTop = showFolder42 && !array.isEmpty() && array.get(0).isFolder;
+            if (showFolder42 && !archiveAtTop) {
+                itemInternals.add(new ItemInternal(VIEW_TYPE_FOLDER42, "Папка № 42"));
+            }
             for (int k = 0; k < array.size(); k++) {
                 if (dialogsType == DialogsActivity.DIALOGS_TYPE_ADD_USERS_TO && array.get(k) instanceof DialogsActivity.DialogsHeader) {
                     itemInternals.add(new ItemInternal(VIEW_TYPE_HEADER_2, array.get(k)));
                 } else {
                     itemInternals.add(new ItemInternal(VIEW_TYPE_DIALOG, array.get(k)));
+                }
+                if (showFolder42 && archiveAtTop && k == 0) {
+                    itemInternals.add(new ItemInternal(VIEW_TYPE_FOLDER42, "Папка № 42"));
                 }
             }
 
