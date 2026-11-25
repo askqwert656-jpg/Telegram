@@ -57,10 +57,10 @@ jobs:
           with open(path, encoding="utf-8") as f:
               source = f.read()
           source, n1 = re.subn(
-              r'public\\s+static\\s+(?:final\\s+)?int\\s+APP_ID\\s*=\\s*[0-9]+\\s*;',
+              r'public\s+static\s+(?:final\s+)?int\s+APP_ID\s*=\s*[0-9]+\s*;',
               f'public static int APP_ID = {app_id};', source)
           source, n2 = re.subn(
-              r'public\\s+static\\s+(?:final\\s+)?String\\s+APP_HASH\\s*=\\s*"[^"]*"\\s*;',
+              r'public\s+static\s+(?:final\s+)?String\s+APP_HASH\s*=\s*"[^"]*"\s*;',
               f'public static String APP_HASH = "{app_hash}";', source)
           if n1 != 1 or n2 != 1:
               raise SystemExit(f"BuildVars update failed (APP_ID={n1}, APP_HASH={n2})")
