@@ -26,7 +26,7 @@ public class ArchivedChatEntity {
     @ColumnInfo(name = "added_at")
     public long addedAt;
 
-    @ColumnInfo(name = "is_active")
+    @ColumnInfo(name = "is_active", defaultValue = "1")
     public boolean isActive = true;
 
     public ArchivedChatEntity(@NonNull String chatId, @NonNull String title, int chatType, long lastSyncedAt, long addedAt) {
