@@ -41,6 +41,34 @@ jobs:
           sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
           yes | sdkmanager --licenses
 
+      - name: Configure PotuzhnoGram Telegram API credentials
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_HASH: ${{ secrets.APP_HASH }}
+        run: |
+          set -euo pipefail
+          [[ "$APP_ID" =~ ^[0-9]+$ ]] || { echo "ERROR: APP_ID is missing or invalid"; exit 1; }
+          [[ "$APP_HASH" =~ ^[0-9a-fA-F]{32}$ ]] || { echo "ERROR: APP_HASH is missing or invalid"; exit 1; }
+
+          python3 - "$APP_ID" "$APP_HASH" <<'PY'
+          import re, sys
+          app_id, app_hash = sys.argv[1:]
+          path = "TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java"
+          with open(path, encoding="utf-8") as f:
+              source = f.read()
+          source, n1 = re.subn(
+              r'public\\s+static\\s+(?:final\\s+)?int\\s+APP_ID\\s*=\\s*[0-9]+\\s*;',
+              f'public static int APP_ID = {app_id};', source)
+          source, n2 = re.subn(
+              r'public\\s+static\\s+(?:final\\s+)?String\\s+APP_HASH\\s*=\\s*"[^"]*"\\s*;',
+              f'public static String APP_HASH = "{app_hash}";', source)
+          if n1 != 1 or n2 != 1:
+              raise SystemExit(f"BuildVars update failed (APP_ID={n1}, APP_HASH={n2})")
+          with open(path, "w", encoding="utf-8") as f:
+              f.write(source)
+          print("PotuzhnoGram Telegram API credentials configured.")
+          PY
+
       - name: Compile PotuzhnoGram debug APK
         run: |
           echo "Building commit $GITHUB_SHA"
