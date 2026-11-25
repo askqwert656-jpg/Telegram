@@ -115,6 +115,7 @@ import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.ContactsLoadingObserver;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.FileLoader;
+import org.telegram.messenger.Folder42ArchiveManager;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.FingerprintController;
 import org.telegram.messenger.FlagSecureReason;
