@@ -1,4 +1,4 @@
-name: PotuzhnoGram Folder 42 Build Check
+name: PotuzhnoGram Folder 42 Build Check - Current Branch
 
 on:
   push:
@@ -39,6 +39,7 @@ jobs:
 
       - name: Compile PotuzhnoGram debug APK
         run: |
+          echo "Building commit $GITHUB_SHA"
           chmod +x ./gradlew
           ./gradlew :TMessagesProj_App:assembleAfatDebug --no-daemon --stacktrace -Dorg.gradle.jvmargs="-Xmx5g -XX:MaxMetaspaceSize=1g"
 
