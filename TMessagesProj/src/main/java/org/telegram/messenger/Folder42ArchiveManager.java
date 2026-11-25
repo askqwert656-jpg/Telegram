@@ -53,7 +53,26 @@ public final class Folder42ArchiveManager {
             final boolean[] changed = {false};
             db.runInTransaction(() -> {
                 ArchivedMessageEntity previous = db.folder42Dao().getMessage(chatId, messageId);
-                if (previous == null || TextUtils.equals(previous.text, safeText)) {
+                if (previous == null) {
+                    if (editedAt <= 0) {
+                        return;
+                    }
+                    long eventTime = editedAt;
+                    db.folder42Dao().insertChat(new ArchivedChatEntity(
+                            chatId, safeTitle, chatType, eventTime, eventTime, false));
+                    db.folder42Dao().insertMessage(new ArchivedMessageEntity(
+                            chatId + ":" + messageId, chatId, messageId, 0, safeText,
+                            eventTime / 1000L, eventTime, null, null));
+                    db.folder42Dao().activateChat(chatId, safeTitle, chatType, eventTime);
+                    db.folder42Dao().insertEdit(new MessageEditEntity(
+                            chatId + ":" + messageId + ":edit:" + eventTime,
+                            chatId + ":" + messageId,
+                            "Исходный текст не был сохранён до первого запуска Папки № 42",
+                            safeText, eventTime));
+                    changed[0] = true;
+                    return;
+                }
+                if (TextUtils.equals(previous.text, safeText)) {
                     return;
                 }
                 long eventTime = editedAt > 0 ? editedAt : System.currentTimeMillis();
