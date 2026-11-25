@@ -124,6 +124,14 @@ public class Folder42ChatActivity extends BaseFragment {
         });
     }
     @Override
+    public void onResume() {
+        super.onResume();
+        if (adapter != null) {
+            loadMessages();
+        }
+    }
+
+    @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
         databaseExecutor.shutdown();
