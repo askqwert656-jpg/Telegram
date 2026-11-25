@@ -17,7 +17,11 @@ import com.example.tgarchive.database.Folder42Database;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
+import org.telegram.messenger.MessagesStorage;
+import org.telegram.tgnet.TLRPC;
+import android.os.Bundle;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.LayoutHelper;
@@ -45,6 +49,9 @@ public class Folder42Activity extends BaseFragment {
                 if (id == -1) finishFragment();
             }
         });
+        ActionBarMenu menu = actionBar.createMenu();
+        menu.addItem(1, R.drawable.msg_add).setContentDescription("Добавить переписку")
+                .setOnClickListener(v -> openChatPicker());
 
         FrameLayout root = new FrameLayout(context);
         root.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
@@ -67,6 +74,47 @@ public class Folder42Activity extends BaseFragment {
         fragmentView = root;
         loadChats();
         return fragmentView;
+    }
+
+    private void openChatPicker() {
+        Bundle args = new Bundle();
+        args.putBoolean("onlySelect", true);
+        args.putInt("dialogsType", DialogsActivity.DIALOGS_TYPE_DEFAULT);
+        DialogsActivity picker = new DialogsActivity(args);
+        picker.setDelegate((fragment, selected, message, param, notify, scheduleDate, scheduleRepeatPeriod, topicsFragment) -> {
+            if (selected == null || selected.isEmpty()) return false;
+            for (MessagesStorage.TopicKey key : selected) {
+                long dialogId = key.dialogId;
+                if (dialogId == 0) continue;
+                String chatId = String.valueOf(dialogId);
+                String title = "";
+                int chatType = 0;
+                if (dialogId > 0) {
+                    TLRPC.User user = getMessagesController().getUser(dialogId);
+                    if (user != null) {
+                        title = org.telegram.messenger.UserObject.getUserName(user);
+                    }
+                } else {
+                    TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
+                    if (chat != null) {
+                        title = chat.title;
+                        chatType = chat.broadcast ? 2 : 1;
+                    }
+                }
+                if (title.isEmpty()) title = "Чат " + chatId;
+                final String savedTitle = title;
+                final int savedType = chatType;
+                databaseExecutor.execute(() -> {
+                    Folder42Database.getInstance(getParentActivity()).folder42Dao().insertChat(
+                            new ArchivedChatEntity(chatId, savedTitle, savedType, 0, System.currentTimeMillis())
+                    );
+                    AndroidUtilities.runOnUIThread(this::loadChats);
+                });
+            }
+            fragment.finishFragment();
+            return true;
+        });
+        presentFragment(picker);
     }
 
     private void loadChats() {
