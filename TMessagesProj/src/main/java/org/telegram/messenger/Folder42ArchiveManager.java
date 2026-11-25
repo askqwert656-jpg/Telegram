@@ -21,7 +21,7 @@ public final class Folder42ArchiveManager {
     }
 
     public static void saveMessage(long dialogId, String chatTitle, int chatType,
-                                   long messageId, long senderId, String text, long date) {
+                                   long messageId, long senderId, String text, long date, String mediaMetadata) {
         if (dialogId == 0 || messageId == 0 || ApplicationLoader.applicationContext == null) {
             return;
         }
@@ -35,7 +35,7 @@ public final class Folder42ArchiveManager {
                         chatId, safeTitle, chatType, System.currentTimeMillis(), System.currentTimeMillis(), false));
                 db.folder42Dao().insertMessage(new ArchivedMessageEntity(
                         chatId + ":" + messageId, chatId, messageId, senderId, safeText,
-                        date, 0, null, null));
+                        date, 0, null, mediaMetadata));
             });
         });
     }
