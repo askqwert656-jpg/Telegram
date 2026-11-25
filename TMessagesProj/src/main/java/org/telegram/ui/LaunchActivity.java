@@ -6315,6 +6315,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             getActionBarLayout().presentFragment(new Folder42Activity());
             return;
         }
+        getActionBarLayout().presentFragment(new Folder42Activity());
         String chatId = String.valueOf(dialogId);
         String title = getFolder42DialogTitle(dialogId, currentAccount);
         getActionBarLayout().presentFragment(new Folder42ChatActivity(chatId, title, messageId));
