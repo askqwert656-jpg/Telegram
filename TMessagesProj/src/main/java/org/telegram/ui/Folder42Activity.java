@@ -154,6 +154,14 @@ public class Folder42Activity extends BaseFragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        if (adapter != null) {
+            loadChats();
+        }
+    }
+
+    @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
         databaseExecutor.shutdown();
