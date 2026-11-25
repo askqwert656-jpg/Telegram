@@ -1,6 +1,7 @@
 package org.telegram.ui;
 
 import android.content.Context;
+import android.app.AlertDialog;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.tgarchive.database.ArchivedMessageEntity;
 import com.example.tgarchive.database.Folder42Database;
+import com.example.tgarchive.database.MessageEditEntity;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
@@ -89,6 +91,23 @@ public class Folder42ChatActivity extends BaseFragment {
         });
     }
 
+    private void showMessageHistory(ArchivedMessageEntity message) {
+        databaseExecutor.execute(() -> {
+            List<MessageEditEntity> edits = Folder42Database.getInstance(getParentActivity()).folder42Dao().getEdits(message.recordId);
+            AndroidUtilities.runOnUIThread(() -> {
+                Context context = getParentActivity();
+                if (context == null) return;
+                StringBuilder history = new StringBuilder("Сохранённый текст: ").append(message.text);
+                if (edits != null) {
+                    for (MessageEditEntity edit : edits) {
+                        history.append("\n\nБыло: ").append(edit.previousText).append("\nСтало: ").append(edit.newText);
+                    }
+                }
+                if (message.deletedAt != null) history.append("\n\nСообщение удалено.");
+                new AlertDialog.Builder(context).setTitle("История сообщения").setMessage(history.toString()).setPositiveButton("Закрыть", null).show();
+            });
+        });
+    }
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
@@ -119,6 +138,7 @@ public class Folder42ChatActivity extends BaseFragment {
             holder.body.setText(message.text);
             String date = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(message.date * 1000L));
             holder.meta.setText(date + (message.deletedAt != null ? " · удалено" : (message.editedAt > 0 ? " · изменено" : "")));
+            holder.itemView.setOnClickListener(v -> showMessageHistory(message));
         }
 
         @Override
