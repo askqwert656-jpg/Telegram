@@ -150,7 +150,11 @@ public class Folder42ChatActivity extends BaseFragment {
         @Override
         public void onBindViewHolder(MessageHolder holder, int position) {
             ArchivedMessageEntity message = messages.get(position);
-            holder.body.setText(message.text);
+            String body = message.text;
+            if (message.mediaMetadata != null && !message.mediaMetadata.isEmpty()) {
+                body = (body == null || body.isEmpty() ? "" : body + "\\n") + "[Медиа: " + message.mediaMetadata + "]";
+            }
+            holder.body.setText(body);
             String date = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(message.date * 1000L));
             holder.meta.setText(date + (message.deletedAt != null ? " · удалено" : (message.editedAt > 0 ? " · изменено" : "")));
             holder.itemView.setOnClickListener(v -> showMessageHistory(message));
