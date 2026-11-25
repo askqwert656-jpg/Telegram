@@ -32,7 +32,7 @@ public final class Folder42ArchiveManager {
             Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
             db.runInTransaction(() -> {
                 db.folder42Dao().insertOrUpdateChat(new ArchivedChatEntity(
-                        chatId, safeTitle, chatType, System.currentTimeMillis(), System.currentTimeMillis()));
+                        chatId, safeTitle, chatType, System.currentTimeMillis(), System.currentTimeMillis(), false));
                 db.folder42Dao().insertMessage(new ArchivedMessageEntity(
                         chatId + ":" + messageId, chatId, messageId, senderId, safeText,
                         date, 0, null, null));
@@ -57,8 +57,7 @@ public final class Folder42ArchiveManager {
                     return;
                 }
                 long eventTime = editedAt > 0 ? editedAt : System.currentTimeMillis();
-                db.folder42Dao().insertOrUpdateChat(new ArchivedChatEntity(
-                        chatId, safeTitle, chatType, eventTime, eventTime));
+                db.folder42Dao().activateChat(chatId, safeTitle, chatType, eventTime);
                 String eventId = chatId + ":" + messageId + ":edit:" + eventTime + ":" + safeText.hashCode();
                 db.folder42Dao().insertEdit(new MessageEditEntity(
                         eventId, previous.recordId, previous.text, safeText, eventTime));
@@ -72,6 +71,23 @@ public final class Folder42ArchiveManager {
         });
     }
 
+    public static void recordDeleteByMessageId(long messageId, long channelId) {
+        if (messageId == 0 || ApplicationLoader.applicationContext == null) return;
+        executor.execute(() -> {
+            Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
+            String chatId = null;
+            if (channelId != 0) {
+                chatId = String.valueOf(-channelId);
+            } else {
+                java.util.List<ArchivedMessageEntity> matches = db.folder42Dao().getMessagesByMessageId(messageId);
+                if (matches == null || matches.size() != 1) return;
+                chatId = matches.get(0).chatId;
+            }
+            com.example.tgarchive.database.ArchivedChatEntity chat = db.folder42Dao().getChat(chatId);
+            if (chat == null) return;
+            recordDelete(Long.parseLong(chatId), chat.title, chat.chatType, messageId, System.currentTimeMillis());
+        });
+    }
     public static void recordDelete(long dialogId, String chatTitle, int chatType,
                                     long messageId, long deletedAt) {
         if (dialogId == 0 || messageId == 0 || ApplicationLoader.applicationContext == null) {
@@ -84,8 +100,7 @@ public final class Folder42ArchiveManager {
             int updated = db.folder42Dao().markMessageDeleted(chatId, messageId,
                     deletedAt > 0 ? deletedAt : System.currentTimeMillis());
             if (updated > 0) {
-                db.folder42Dao().insertOrUpdateChat(new ArchivedChatEntity(
-                        chatId, safeTitle, chatType, System.currentTimeMillis(), System.currentTimeMillis()));
+                db.folder42Dao().activateChat(chatId, safeTitle, chatType, System.currentTimeMillis());
                 Folder42Notifications.notifyMessageChanged(ApplicationLoader.applicationContext,
                         safeTitle, true, dialogId, (int) messageId);
             }
