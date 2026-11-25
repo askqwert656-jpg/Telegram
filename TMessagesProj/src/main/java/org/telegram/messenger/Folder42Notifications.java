@@ -59,7 +59,7 @@ public final class Folder42Notifications {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.putExtra("folder42_open", true);
         intent.putExtra("folder42_dialog_id", dialogId);
-        intent.putExtra("folder42_message_id", messageId);
+        intent.putExtra("folder42_message_id", (long) messageId);
         int requestCode = (int) (dialogId ^ (dialogId >>> 32)) ^ messageId;
         PendingIntent pendingIntent = PendingIntent.getActivity(context, requestCode, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
