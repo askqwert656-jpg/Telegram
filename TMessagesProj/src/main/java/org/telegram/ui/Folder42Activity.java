@@ -71,6 +71,10 @@ public class Folder42Activity extends BaseFragment {
                     }
                     Toast.makeText(context, enabled ? "Уведомления Папки № 42 включены" : "Уведомления Папки № 42 отключены", Toast.LENGTH_SHORT).show();
                 });
+        if (Folder42Notifications.areEnabled(context) && Folder42Notifications.shouldRequestPermission(context) && getParentActivity() != null) {
+            ActivityCompat.requestPermissions(getParentActivity(),
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS}, 42042);
+        }
 
         FrameLayout root = new FrameLayout(context);
         root.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
