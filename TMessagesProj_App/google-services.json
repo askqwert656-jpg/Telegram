@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:572314917815:android:84f4711f664f24ec6c2632",
+        "android_client_info": {
+          "package_name": "org.potuzhnogram.messenger"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHa28NoMa5EFYAXol111jprrYVQVPunyU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:572314917815:android:c8047c48c21fce206c2632",
         "android_client_info": {
           "package_name": "org.telegram.messenger"
