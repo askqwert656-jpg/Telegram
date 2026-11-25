@@ -3,6 +3,7 @@ package com.example.tgarchive.database;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 /** A locally indexed chat stored in PotuzhnoGram Folder 42. */
@@ -29,6 +30,7 @@ public class ArchivedChatEntity {
     @ColumnInfo(name = "is_active", defaultValue = "1")
     public boolean isActive = true;
 
+    @Ignore
     public ArchivedChatEntity(@NonNull String chatId, @NonNull String title, int chatType, long lastSyncedAt, long addedAt) {
         this(chatId, title, chatType, lastSyncedAt, addedAt, true);
     }
