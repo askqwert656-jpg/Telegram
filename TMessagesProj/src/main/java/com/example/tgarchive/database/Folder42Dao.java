@@ -22,7 +22,7 @@ public interface Folder42Dao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     long insertEdit(MessageEditEntity edit);
 
-    @Query("SELECT * FROM folder42_chats WHERE is_active = 1 ORDER BY added_at DESC")
+    @Query("SELECT * FROM folder42_chats WHERE is_active = 1 ORDER BY last_synced_at DESC, added_at DESC")
     List<ArchivedChatEntity> getChats();
 
     @Query("SELECT * FROM folder42_chats WHERE chat_id = :chatId LIMIT 1")
