@@ -34,14 +34,21 @@ import java.util.concurrent.Executors;
 public class Folder42ChatActivity extends BaseFragment {
     private final String chatId;
     private final String chatTitle;
+    private final long targetMessageId;
     private final ExecutorService databaseExecutor = Executors.newSingleThreadExecutor();
     private final ArrayList<ArchivedMessageEntity> messages = new ArrayList<>();
     private MessageAdapter adapter;
+    private RecyclerView messageList;
     private TextView emptyView;
 
     public Folder42ChatActivity(String chatId, String chatTitle) {
+        this(chatId, chatTitle, 0);
+    }
+
+    public Folder42ChatActivity(String chatId, String chatTitle, long targetMessageId) {
         this.chatId = chatId;
         this.chatTitle = chatTitle;
+        this.targetMessageId = targetMessageId;
     }
 
     @Override
@@ -59,11 +66,11 @@ public class Folder42ChatActivity extends BaseFragment {
         FrameLayout root = new FrameLayout(context);
         root.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
 
-        RecyclerView list = new RecyclerView(context);
-        list.setLayoutManager(new LinearLayoutManager(context));
+        messageList = new RecyclerView(context);
+        messageList.setLayoutManager(new LinearLayoutManager(context));
         adapter = new MessageAdapter();
-        list.setAdapter(adapter);
-        root.addView(list, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        messageList.setAdapter(adapter);
+        root.addView(messageList, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         emptyView = new TextView(context);
         emptyView.setText("В этой переписке пока нет сохранённых сообщений.");
@@ -87,6 +94,14 @@ public class Folder42ChatActivity extends BaseFragment {
                 if (result != null) messages.addAll(result);
                 adapter.notifyDataSetChanged();
                 if (emptyView != null) emptyView.setVisibility(messages.isEmpty() ? View.VISIBLE : View.GONE);
+                if (targetMessageId != 0 && messageList != null) {
+                    for (int i = 0; i < messages.size(); i++) {
+                        if (messages.get(i).messageId == targetMessageId) {
+                            messageList.scrollToPosition(i);
+                            break;
+                        }
+                    }
+                }
             });
         });
     }
