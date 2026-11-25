@@ -4,13 +4,14 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Upsert;
 
 import java.util.List;
 
 @Dao
 public interface Folder42Dao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    long insertOrUpdateChat(ArchivedChatEntity chat);
+    @Upsert
+    void insertOrUpdateChat(ArchivedChatEntity chat);
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     long insertChat(ArchivedChatEntity chat);
