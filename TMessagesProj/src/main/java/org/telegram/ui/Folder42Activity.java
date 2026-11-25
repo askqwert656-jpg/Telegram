@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -16,6 +17,7 @@ import com.example.tgarchive.database.ArchivedChatEntity;
 import com.example.tgarchive.database.Folder42Database;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.Folder42Notifications;
 import org.telegram.messenger.R;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.tgnet.TLRPC;
@@ -52,6 +54,12 @@ public class Folder42Activity extends BaseFragment {
         ActionBarMenu menu = actionBar.createMenu();
         menu.addItem(1, R.drawable.msg_add).setContentDescription("Добавить переписку")
                 .setOnClickListener(v -> openChatPicker());
+        menu.addItem(2, R.drawable.msg_notifications).setContentDescription("Уведомления Папки № 42")
+                .setOnClickListener(v -> {
+                    boolean enabled = !Folder42Notifications.areEnabled(context);
+                    Folder42Notifications.setEnabled(context, enabled);
+                    Toast.makeText(context, enabled ? "Уведомления Папки № 42 включены" : "Уведомления Папки № 42 отключены", Toast.LENGTH_SHORT).show();
+                });
 
         FrameLayout root = new FrameLayout(context);
         root.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
