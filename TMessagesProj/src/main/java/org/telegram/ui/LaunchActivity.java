@@ -7461,6 +7461,14 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         super.onMultiWindowModeChanged(isInMultiWindowMode);
     }
 
+    private int getFolder42DialogType(long dialogId, int account) {
+        if (dialogId > 0) {
+            return 0;
+        }
+        TLRPC.Chat chat = MessagesController.getInstance(account).getChat(-dialogId);
+        return chat != null && chat.broadcast ? 2 : 1;
+    }
+
     private String getFolder42DialogTitle(long dialogId, int account) {
         if (dialogId > 0) {
             TLRPC.User user = MessagesController.getInstance(account).getUser(dialogId);
@@ -7484,7 +7492,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 long dialogId = (Long) args[0];
                 ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
                 String title = getFolder42DialogTitle(dialogId, account);
-                int chatType = dialogId > 0 ? 0 : 1;
+                int chatType = getFolder42DialogType(dialogId, account);
                 if (messages != null) {
                     for (MessageObject message : messages) {
                         if (message != null && message.messageOwner != null) {
@@ -7520,7 +7528,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         if (messageId != null) {
                             long dialogId = channelId == 0 ? 0 : -channelId;
                             String title = dialogId == 0 ? "" : getFolder42DialogTitle(dialogId, account);
-                            int chatType = dialogId < 0 ? 1 : 0;
+                            int chatType = getFolder42DialogType(dialogId, account);
                             Folder42ArchiveManager.recordDeleteByMessageId(messageId, channelId, title, chatType);
                         }
                     }
