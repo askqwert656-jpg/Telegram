@@ -116,9 +116,9 @@ public class Folder42ChatActivity extends BaseFragment {
         @Override
         public void onBindViewHolder(MessageHolder holder, int position) {
             ArchivedMessageEntity message = messages.get(position);
-            holder.body.setText(message.deletedAt != null ? "Сообщение удалено" : message.text);
+            holder.body.setText(message.text);
             String date = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(message.date * 1000L));
-            holder.meta.setText(message.editedAt > 0 ? date + " · изменено" : date);
+            holder.meta.setText(date + (message.deletedAt != null ? " · удалено" : (message.editedAt > 0 ? " · изменено" : "")));
         }
 
         @Override
