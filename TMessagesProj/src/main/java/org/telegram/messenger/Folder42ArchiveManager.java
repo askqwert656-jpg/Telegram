@@ -90,13 +90,15 @@ public final class Folder42ArchiveManager {
         });
     }
 
-    public static void recordDeleteByMessageId(long messageId, long channelId) {
+    public static void recordDeleteByMessageId(long messageId, long channelId, String chatTitle, int chatType) {
         if (messageId == 0 || ApplicationLoader.applicationContext == null) return;
         executor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
             String chatId = null;
             if (channelId != 0) {
                 chatId = String.valueOf(-channelId);
+                recordDelete(-channelId, chatTitle, chatType, messageId, System.currentTimeMillis());
+                return;
             } else {
                 java.util.List<ArchivedMessageEntity> matches = db.folder42Dao().getMessagesByMessageId(messageId);
                 if (matches == null || matches.size() != 1) return;
@@ -116,13 +118,18 @@ public final class Folder42ArchiveManager {
         final String safeTitle = TextUtils.isEmpty(chatTitle) ? "Переписка " + chatId : chatTitle;
         executor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
-            int updated = db.folder42Dao().markMessageDeleted(chatId, messageId,
-                    deletedAt > 0 ? deletedAt : System.currentTimeMillis());
-            if (updated > 0) {
-                db.folder42Dao().activateChat(chatId, safeTitle, chatType, System.currentTimeMillis());
-                Folder42Notifications.notifyMessageChanged(ApplicationLoader.applicationContext,
-                        safeTitle, true, dialogId, (int) messageId);
+            long eventTime = deletedAt > 0 ? deletedAt : System.currentTimeMillis();
+            int updated = db.folder42Dao().markMessageDeleted(chatId, messageId, eventTime);
+            if (updated == 0) {
+                db.folder42Dao().insertChat(new ArchivedChatEntity(
+                        chatId, safeTitle, chatType, eventTime, eventTime, false));
+                db.folder42Dao().insertMessage(new ArchivedMessageEntity(
+                        chatId + ":" + messageId, chatId, messageId, 0,
+                        "Текст до удаления не был сохранён", eventTime / 1000L, 0, eventTime, null));
             }
+            db.folder42Dao().activateChat(chatId, safeTitle, chatType, eventTime);
+            Folder42Notifications.notifyMessageChanged(ApplicationLoader.applicationContext,
+                    safeTitle, true, dialogId, (int) messageId);
         });
     }
 }
