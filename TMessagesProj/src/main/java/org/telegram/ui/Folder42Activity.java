@@ -87,7 +87,12 @@ public class Folder42Activity extends BaseFragment {
         LinearLayout folderDescriptionRow = new LinearLayout(context);
         folderDescriptionRow.setOrientation(LinearLayout.HORIZONTAL);
         folderDescriptionRow.setGravity(Gravity.CENTER_VERTICAL);
-        folderDescriptionRow.setPadding(AndroidUtilities.dp(17), AndroidUtilities.dp(7), AndroidUtilities.dp(16), AndroidUtilities.dp(7));
+        folderDescriptionRow.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(6), AndroidUtilities.dp(14), AndroidUtilities.dp(6));
+        GradientDrawable descriptionBackground = new GradientDrawable();
+        descriptionBackground.setColor(0xFF171322);
+        descriptionBackground.setCornerRadius(AndroidUtilities.dp(7));
+        descriptionBackground.setStroke(AndroidUtilities.dp(1), 0x665F4A91);
+        folderDescriptionRow.setBackground(descriptionBackground);
 
         View descriptionAccent = new View(context);
         GradientDrawable accentDrawable = new GradientDrawable(
@@ -101,20 +106,20 @@ public class Folder42Activity extends BaseFragment {
         TextView folderDescription = new TextView(context);
         folderDescription.setText("42 причины не доверять кнопке “Удалить”.");
         folderDescription.setTextSize(12);
-        folderDescription.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
-        folderDescription.setTextColor(0xFF8D7BE0);
-        folderDescription.setLetterSpacing(0.01f);
+        folderDescription.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        folderDescription.setTextColor(0xFFC2A9FF);
+        folderDescription.setLetterSpacing(0.025f);
         folderDescription.setPadding(AndroidUtilities.dp(10), 0, 0, 0);
         folderDescriptionRow.addView(folderDescription,
                 new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         root.addView(folderDescriptionRow,
-                LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 42, Gravity.TOP));
+                LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 40, Gravity.TOP));
 
         RecyclerView list = new RecyclerView(context);
         list.setLayoutManager(new LinearLayoutManager(context));
         adapter = new ChatAdapter();
         list.setAdapter(adapter);
-        root.addView(list, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, 0, 42, 0, 0));
+        root.addView(list, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, AndroidUtilities.dp(8), 40, AndroidUtilities.dp(8), 0));
 
         emptyView = new TextView(context);
         emptyView.setText("Переписки появятся здесь автоматически после редактирования или удаления сообщений.\nМожно также добавить чат вручную.");
@@ -122,7 +127,7 @@ public class Folder42Activity extends BaseFragment {
         emptyView.setTextSize(15);
         emptyView.setGravity(Gravity.CENTER);
         emptyView.setPadding(AndroidUtilities.dp(32), AndroidUtilities.dp(24), AndroidUtilities.dp(32), AndroidUtilities.dp(24));
-        root.addView(emptyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, 0, 92, 0, 0));
+        root.addView(emptyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, 0, 48, 0, 0));
         emptyView.setVisibility(View.GONE);
 
         fragmentView = root;
