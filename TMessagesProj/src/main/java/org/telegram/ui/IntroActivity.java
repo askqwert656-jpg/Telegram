@@ -590,7 +590,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
             frameLayout.addView(headerTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.LEFT, 18, 244, 18, 0));
 
             ThemeBind.textColor(messageTextView, Theme.key_windowBackgroundWhiteBlackText);
-            messageTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+            messageTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
             messageTextView.setLineSpacing(dpf2(2.33f), 1f);
             messageTextView.setGravity(Gravity.CENTER);
             frameLayout.addView(messageTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.LEFT, 16, 286, 16, 0));
