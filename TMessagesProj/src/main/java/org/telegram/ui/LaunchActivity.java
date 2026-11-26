@@ -7510,7 +7510,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 long dialogId = (Long) args[0];
                 ArrayList<MessageObject> messages = (ArrayList<MessageObject>) args[1];
                 String title = getFolder42DialogTitle(dialogId, account);
-                int chatType = dialogId > 0 ? 0 : 1;
+                int chatType = getFolder42DialogType(dialogId, account);
                 if (messages != null) {
                     for (MessageObject message : messages) {
                         if (message != null && message.messageOwner != null) {
