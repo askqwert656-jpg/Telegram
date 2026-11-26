@@ -48,19 +48,44 @@ android {
         localeFilters += ["zz"]
     }
 
+    // CI supplies the same verified PotuzhnoGram signing identity to every variant.
+    def releaseStorePassword = providers.gradleProperty('RELEASE_STORE_PASSWORD').orNull
+    def releaseKeyAlias = providers.gradleProperty('RELEASE_KEY_ALIAS').orNull
+    def releaseKeyPassword = providers.gradleProperty('RELEASE_KEY_PASSWORD').orNull
+
     signingConfigs {
         debug {
             storeFile file("../TMessagesProj/config/release.keystore")
-            storePassword RELEASE_STORE_PASSWORD
-            keyAlias RELEASE_KEY_ALIAS
-            keyPassword RELEASE_KEY_PASSWORD
+            if (releaseStorePassword != null) storePassword releaseStorePassword
+            if (releaseKeyAlias != null) keyAlias releaseKeyAlias
+            if (releaseKeyPassword != null) keyPassword releaseKeyPassword
         }
 
         release {
             storeFile file("../TMessagesProj/config/release.keystore")
-            storePassword RELEASE_STORE_PASSWORD
-            keyAlias RELEASE_KEY_ALIAS
-            keyPassword RELEASE_KEY_PASSWORD
+            if (releaseStorePassword != null) storePassword releaseStorePassword
+            if (releaseKeyAlias != null) keyAlias releaseKeyAlias
+            if (releaseKeyPassword != null) keyPassword releaseKeyPassword
+        }
+    }
+
+    gradle.taskGraph.whenReady { graph ->
+        def needsSigning = graph.allTasks.any { task ->
+            task.project == project && (
+                task.name.toLowerCase().contains('debug') ||
+                task.name.toLowerCase().contains('release') ||
+                task.name.toLowerCase().contains('standalone')
+            )
+        }
+        if (needsSigning) {
+            def missing = []
+            if (!releaseStorePassword) missing << 'RELEASE_STORE_PASSWORD'
+            if (!releaseKeyAlias) missing << 'RELEASE_KEY_ALIAS'
+            if (!releaseKeyPassword) missing << 'RELEASE_KEY_PASSWORD'
+            if (!file("../TMessagesProj/config/release.keystore").exists()) missing << 'release.keystore'
+            if (!missing.isEmpty()) {
+                throw new GradleException("APK signing is not configured. Missing: " + missing.join(', ') + ". Configure GitHub Actions Secrets.")
+            }
         }
     }
 
