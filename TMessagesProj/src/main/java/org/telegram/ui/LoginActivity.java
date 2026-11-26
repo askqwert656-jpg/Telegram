@@ -8244,7 +8244,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             firstNameField.setCursorSize(AndroidUtilities.dp(20));
             firstNameField.setCursorWidth(1.5f);
             firstNameField.setImeOptions(EditorInfo.IME_ACTION_NEXT | EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-            firstNameField.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 17);
+            firstNameField.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
             firstNameField.setMaxLines(1);
             firstNameField.setInputType(InputType.TYPE_TEXT_FLAG_CAP_WORDS);
             firstNameField.setOnFocusChangeListener((v, hasFocus) -> firstNameOutlineView.animateSelection(hasFocus ? 1f : 0f));
