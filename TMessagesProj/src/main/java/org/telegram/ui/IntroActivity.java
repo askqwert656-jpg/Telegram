@@ -627,8 +627,6 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
             super.setPrimaryItem(container, position, object);
             bottomPages.setCurrentPage(position);
             currentViewPagerPage = position;
-            textureView.setVisibility(position == 0 ? View.GONE : View.VISIBLE);
-            potuzhnoGramLogoView.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
         }
 
         @Override
