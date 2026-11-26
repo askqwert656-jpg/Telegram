@@ -248,7 +248,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         frameLayout2.addView(textureView, LayoutHelper.createFrame(ICON_WIDTH_DP, ICON_HEIGHT_DP, Gravity.CENTER));
 
         ImageView potuzhnoGramLogoView = new ImageView(context);
-        potuzhnoGramLogoView.setImageResource(R.drawable.ic_launcher_foreground);
+        potuzhnoGramLogoView.setImageResource(R.drawable.potuzhnogram_intro_emblem);
         potuzhnoGramLogoView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         potuzhnoGramLogoView.setContentDescription("PotuzhnoGram");
         frameLayout2.addView(potuzhnoGramLogoView, LayoutHelper.createFrame(150, 150, Gravity.CENTER));
@@ -804,7 +804,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
             loadTexture(R.drawable.intro_private_screw, 20);
             loadTexture(v -> {
                 Bitmap source = android.graphics.BitmapFactory.decodeResource(
-                        getParentActivity().getResources(), R.drawable.ic_launcher_foreground
+                        getParentActivity().getResources(), R.drawable.potuzhnogram_intro_emblem
                 );
                 int size = dp(ICON_HEIGHT_DP);
                 Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
