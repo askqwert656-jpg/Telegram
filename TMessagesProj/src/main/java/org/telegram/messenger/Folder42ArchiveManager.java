@@ -20,9 +20,15 @@ public final class Folder42ArchiveManager {
     private Folder42ArchiveManager() {
     }
 
+    private static boolean isOwnMessage(long senderId) {
+        long selfId = UserConfig.getInstance(UserConfig.selectedAccount).getClientUserId();
+        return selfId != 0 && senderId == selfId;
+    }
+
+
     public static void saveMessage(long dialogId, String chatTitle, int chatType,
                                    long messageId, long senderId, String text, long date, String mediaMetadata) {
-        if (dialogId == 0 || messageId == 0 || ApplicationLoader.applicationContext == null) {
+        if (dialogId == 0 || messageId == 0 || ApplicationLoader.applicationContext == null || isOwnMessage(senderId)) {
             return;
         }
         final String chatId = String.valueOf(dialogId);
@@ -53,23 +59,9 @@ public final class Folder42ArchiveManager {
             final boolean[] changed = {false};
             db.runInTransaction(() -> {
                 ArchivedMessageEntity previous = db.folder42Dao().getMessage(chatId, messageId);
-                if (previous == null) {
-                    long eventTime = editedAt > 0 ? editedAt : System.currentTimeMillis();
-                    db.folder42Dao().insertChat(new ArchivedChatEntity(
-                            chatId, safeTitle, chatType, eventTime, eventTime, false));
-                    db.folder42Dao().insertMessage(new ArchivedMessageEntity(
-                            chatId + ":" + messageId, chatId, messageId, 0, safeText,
-                            messageDate > 0 ? messageDate : eventTime / 1000L,
-                            editedAt > 0 ? eventTime : 0, null, null));
-                    if (editedAt > 0) {
-                        db.folder42Dao().activateChat(chatId, safeTitle, chatType, eventTime);
-                        db.folder42Dao().insertEdit(new MessageEditEntity(
-                                chatId + ":" + messageId + ":edit:" + eventTime,
-                                chatId + ":" + messageId,
-                                "Исходный текст не был сохранён до первого запуска Папки № 42",
-                                safeText, eventTime));
-                    }
-                    changed[0] = editedAt > 0;
+                // Without a pre-edit copy we cannot identify the author reliably.
+                // Never create a speculative record for an unknown sender.
+                if (previous == null || isOwnMessage(previous.senderId)) {
                     return;
                 }
                 if (TextUtils.equals(previous.text, safeText)) {
@@ -119,17 +111,13 @@ public final class Folder42ArchiveManager {
         executor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
             ArchivedMessageEntity existing = db.folder42Dao().getMessage(chatId, messageId);
-            if (existing != null && existing.deletedAt != null) {
+            if (existing == null || existing.deletedAt != null || isOwnMessage(existing.senderId)) {
                 return;
             }
             long eventTime = deletedAt > 0 ? deletedAt : System.currentTimeMillis();
             int updated = db.folder42Dao().markMessageDeleted(chatId, messageId, eventTime);
             if (updated == 0) {
-                db.folder42Dao().insertChat(new ArchivedChatEntity(
-                        chatId, safeTitle, chatType, eventTime, eventTime, false));
-                db.folder42Dao().insertMessage(new ArchivedMessageEntity(
-                        chatId + ":" + messageId, chatId, messageId, 0,
-                        "Текст до удаления не был сохранён", eventTime / 1000L, 0, eventTime, null));
+                return;
             }
             db.folder42Dao().activateChat(chatId, safeTitle, chatType, eventTime);
             Folder42Notifications.notifyMessageChanged(ApplicationLoader.applicationContext,
