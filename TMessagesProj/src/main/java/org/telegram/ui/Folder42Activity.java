@@ -27,6 +27,7 @@ import com.example.tgarchive.database.Folder42Database;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.Folder42Notifications;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.tgnet.TLRPC;
 import android.os.Bundle;
@@ -177,7 +178,15 @@ public class Folder42Activity extends BaseFragment {
 
     private void loadChats() {
         databaseExecutor.execute(() -> {
-            List<ArchivedChatEntity> result = Folder42Database.getInstance(getParentActivity()).folder42Dao().getChats();
+            Folder42Database db = Folder42Database.getInstance(getParentActivity());
+            long selfId = UserConfig.getInstance(UserConfig.selectedAccount).getClientUserId();
+            if (selfId != 0) {
+                db.runInTransaction(() -> {
+                    db.folder42Dao().removeEditsFromSender(selfId);
+                    db.folder42Dao().removeMessagesFromSender(selfId);
+                });
+            }
+            List<ArchivedChatEntity> result = db.folder42Dao().getChats();
             AndroidUtilities.runOnUIThread(() -> {
                 if (adapter == null || fragmentView == null) return;
                 chats.clear();
