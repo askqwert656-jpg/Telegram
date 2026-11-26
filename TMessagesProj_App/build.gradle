@@ -46,8 +46,8 @@ android {
         localeFilters += ["zz"]
     }
 
-    // Release credentials are supplied only by CI through Gradle properties
-    // (which are populated from GitHub Actions Secrets). Debug must not depend on them.
+    // All build variants use credentials injected by CI from GitHub Actions Secrets.
+    // Debug uses the same certificate as Release so test APKs validate the production signing identity.
     def releaseStorePassword = providers.gradleProperty('RELEASE_STORE_PASSWORD').orNull
     def releaseKeyAlias = providers.gradleProperty('RELEASE_KEY_ALIAS').orNull
     def releaseKeyPassword = providers.gradleProperty('RELEASE_KEY_PASSWORD').orNull
@@ -68,17 +68,21 @@ android {
     }
 
     gradle.taskGraph.whenReady { graph ->
-        def needsReleaseSigning = graph.allTasks.any { task ->
-            task.project == project && (task.name.toLowerCase().contains('release') || task.name.toLowerCase().contains('standalone'))
+        def needsSigning = graph.allTasks.any { task ->
+            task.project == project && (
+                task.name.toLowerCase().contains('debug') ||
+                task.name.toLowerCase().contains('release') ||
+                task.name.toLowerCase().contains('standalone')
+            )
         }
-        if (needsReleaseSigning) {
+        if (needsSigning) {
             def missing = []
             if (!releaseStorePassword) missing << 'RELEASE_STORE_PASSWORD'
             if (!releaseKeyAlias) missing << 'RELEASE_KEY_ALIAS'
             if (!releaseKeyPassword) missing << 'RELEASE_KEY_PASSWORD'
             if (!file("../TMessagesProj/config/release.keystore").exists()) missing << 'release.keystore'
             if (!missing.isEmpty()) {
-                throw new GradleException("Release signing is not configured. Missing: " + missing.join(', ') + ". Configure GitHub Actions Secrets.")
+                throw new GradleException("APK signing is not configured. Missing: " + missing.join(', ') + ". Configure GitHub Actions Secrets.")
             }
         }
     }
@@ -91,6 +95,7 @@ android {
 
     buildTypes {
         debug {
+            signingConfig signingConfigs.release
             debuggable true
             jniDebuggable true
             applicationIdSuffix ".beta"
