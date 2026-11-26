@@ -9,6 +9,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -81,11 +82,41 @@ public class Folder42Activity extends BaseFragment {
         FrameLayout root = new FrameLayout(context);
         root.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
 
+        LinearLayout folderHeader = new LinearLayout(context);
+        folderHeader.setOrientation(LinearLayout.HORIZONTAL);
+        folderHeader.setGravity(Gravity.CENTER_VERTICAL);
+        folderHeader.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(16), AndroidUtilities.dp(20), AndroidUtilities.dp(16));
+        folderHeader.setBackgroundColor(0xFF171326);
+
+        ImageView folderIcon = new ImageView(context);
+        folderIcon.setImageResource(R.drawable.folder42);
+        folderIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        folderIcon.setContentDescription("Папка № 42");
+        folderHeader.addView(folderIcon, new LinearLayout.LayoutParams(AndroidUtilities.dp(60), AndroidUtilities.dp(60)));
+
+        LinearLayout folderTitles = new LinearLayout(context);
+        folderTitles.setOrientation(LinearLayout.VERTICAL);
+        folderTitles.setPadding(AndroidUtilities.dp(16), 0, 0, 0);
+        TextView folderTitle = new TextView(context);
+        folderTitle.setText("ПАПКА № 42");
+        folderTitle.setTextSize(23);
+        folderTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        folderTitle.setTextColor(0xFFFFFFFF);
+        folderTitles.addView(folderTitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        TextView folderDescription = new TextView(context);
+        folderDescription.setText("История изменений и сохранённые переписки");
+        folderDescription.setTextSize(13);
+        folderDescription.setTextColor(0xFFD8B4FE);
+        folderDescription.setPadding(0, AndroidUtilities.dp(3), 0, 0);
+        folderTitles.addView(folderDescription, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        folderHeader.addView(folderTitles, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        root.addView(folderHeader, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP));
+
         RecyclerView list = new RecyclerView(context);
         list.setLayoutManager(new LinearLayoutManager(context));
         adapter = new ChatAdapter();
         list.setAdapter(adapter);
-        root.addView(list, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        root.addView(list, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, 0, 104, 0, 0));
 
         emptyView = new TextView(context);
         emptyView.setText("Переписки появятся здесь автоматически после редактирования или удаления сообщений.\nМожно также добавить чат вручную.");
@@ -93,7 +124,7 @@ public class Folder42Activity extends BaseFragment {
         emptyView.setTextSize(15);
         emptyView.setGravity(Gravity.CENTER);
         emptyView.setPadding(AndroidUtilities.dp(32), AndroidUtilities.dp(24), AndroidUtilities.dp(32), AndroidUtilities.dp(24));
-        root.addView(emptyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        root.addView(emptyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, 0, 104, 0, 0));
         emptyView.setVisibility(View.GONE);
 
         fragmentView = root;
