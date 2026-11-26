@@ -7528,10 +7528,16 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 if (ids != null) {
                     for (Integer messageId : ids) {
                         if (messageId != null) {
-                            long dialogId = channelId == 0 ? 0 : -channelId;
-                            String title = dialogId == 0 ? "" : getFolder42DialogTitle(dialogId, account);
-                            int chatType = getFolder42DialogType(dialogId, account);
-                            Folder42ArchiveManager.recordDeleteByMessageId(messageId, channelId, title, chatType);
+                            long dialogId = args.length >= 4 && args[3] instanceof Long
+                                    ? (Long) args[3] : (channelId == 0 ? 0 : -channelId);
+                            if (dialogId != 0) {
+                                String title = getFolder42DialogTitle(dialogId, account);
+                                int chatType = getFolder42DialogType(dialogId, account);
+                                Folder42ArchiveManager.recordDelete(dialogId, title, chatType,
+                                        messageId, System.currentTimeMillis());
+                            } else {
+                                Folder42ArchiveManager.recordDeleteByMessageId(messageId, channelId, "", 0);
+                            }
                         }
                     }
                 }
