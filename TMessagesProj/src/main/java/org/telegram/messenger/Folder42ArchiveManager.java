@@ -41,7 +41,7 @@ public final class Folder42ArchiveManager {
     }
 
     public static void recordEdit(long dialogId, String chatTitle, int chatType,
-                                  long messageId, String newText, long editedAt) {
+                                  long messageId, String newText, long messageDate, long editedAt) {
         if (dialogId == 0 || messageId == 0 || ApplicationLoader.applicationContext == null) {
             return;
         }
@@ -54,22 +54,22 @@ public final class Folder42ArchiveManager {
             db.runInTransaction(() -> {
                 ArchivedMessageEntity previous = db.folder42Dao().getMessage(chatId, messageId);
                 if (previous == null) {
-                    if (editedAt <= 0) {
-                        return;
-                    }
-                    long eventTime = editedAt;
+                    long eventTime = editedAt > 0 ? editedAt : System.currentTimeMillis();
                     db.folder42Dao().insertChat(new ArchivedChatEntity(
                             chatId, safeTitle, chatType, eventTime, eventTime, false));
                     db.folder42Dao().insertMessage(new ArchivedMessageEntity(
                             chatId + ":" + messageId, chatId, messageId, 0, safeText,
-                            eventTime / 1000L, eventTime, null, null));
-                    db.folder42Dao().activateChat(chatId, safeTitle, chatType, eventTime);
-                    db.folder42Dao().insertEdit(new MessageEditEntity(
-                            chatId + ":" + messageId + ":edit:" + eventTime,
-                            chatId + ":" + messageId,
-                            "Исходный текст не был сохранён до первого запуска Папки № 42",
-                            safeText, eventTime));
-                    changed[0] = true;
+                            messageDate > 0 ? messageDate : eventTime / 1000L,
+                            editedAt > 0 ? eventTime : 0, null, null));
+                    if (editedAt > 0) {
+                        db.folder42Dao().activateChat(chatId, safeTitle, chatType, eventTime);
+                        db.folder42Dao().insertEdit(new MessageEditEntity(
+                                chatId + ":" + messageId + ":edit:" + eventTime,
+                                chatId + ":" + messageId,
+                                "Исходный текст не был сохранён до первого запуска Папки № 42",
+                                safeText, eventTime));
+                    }
+                    changed[0] = editedAt > 0;
                     return;
                 }
                 if (TextUtils.equals(previous.text, safeText)) {
