@@ -2358,7 +2358,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             phoneField.setPadding(0, 0, 0, 0);
             phoneField.setCursorSize(AndroidUtilities.dp(20));
             phoneField.setCursorWidth(1.5f);
-            phoneField.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+            phoneField.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
             phoneField.setMaxLines(1);
             phoneField.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
             phoneField.setImeOptions(EditorInfo.IME_ACTION_NEXT | EditorInfo.IME_FLAG_NO_EXTRACT_UI);
