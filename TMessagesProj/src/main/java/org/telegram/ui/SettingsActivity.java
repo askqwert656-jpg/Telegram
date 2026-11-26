@@ -796,9 +796,6 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             items.add(SettingCell.Factory.of(13, 0xFF1BA4ED, 0xFF1488E1, R.drawable.filled_gram_earnings, getString(R.string.GramEarnings), null, c.balanceAvailable() && balance > 0 ? StarsIntroActivity.formatStarsAmount(c.getBalance(), 0.85f, ' ') : ""));
         }
 
-        if (!getMessagesController().premiumPurchaseBlocked()) {
-            items.add(SettingCell.Factory.of(16, 0xFFF38B31, 0xFFE26314, R.drawable.settings_gift, getString(R.string.SendAGift)));
-        }
         if (items.get(items.size() - 1).viewType != UniversalAdapter.VIEW_TYPE_SHADOW)
             items.add(UItem.asShadow(null));
 
@@ -910,13 +907,6 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 break;
             case 13:
                 presentSettingFragment(new TONIntroActivity());
-                break;
-            case 16:
-                UserSelectorBottomSheet.open(0, BirthdayController.getInstance(UserConfig.selectedAccount).getState());
-                break;
-
-            case 28:
-                ProfileActivity.sendLogs(getParentActivity(), false);
                 break;
             case 20:
                 ProfileActivity.sendLogs(getParentActivity(), false);
