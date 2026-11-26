@@ -183,7 +183,7 @@ public class CheckBoxCell extends FrameLayout {
 
         valueTextView = new TextView(context);
         valueTextView.setTag(type == TYPE_CHECK_BOX_DEFAULT || type == TYPE_CHECK_BOX_URL ? Theme.key_dialogTextBlue : Theme.key_windowBackgroundWhiteValueText);
-        valueTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+        valueTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
         valueTextView.setLines(1);
         valueTextView.setMaxLines(1);
         valueTextView.setSingleLine(true);
