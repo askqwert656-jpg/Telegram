@@ -49,6 +49,12 @@ public interface Folder42Dao {
     @Query("SELECT * FROM folder42_message_edits WHERE message_record_id = :messageRecordId ORDER BY edited_at ASC")
     List<MessageEditEntity> getEdits(String messageRecordId);
 
+    @Query("DELETE FROM folder42_message_edits WHERE message_record_id IN (SELECT record_id FROM folder42_messages WHERE sender_id = :senderId)")
+    int removeEditsFromSender(long senderId);
+
+    @Query("DELETE FROM folder42_messages WHERE sender_id = :senderId")
+    int removeMessagesFromSender(long senderId);
+
     @Query("DELETE FROM folder42_message_edits WHERE message_record_id = :recordId")
     int removeEdits(String recordId);
 
