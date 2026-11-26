@@ -520,6 +520,17 @@ public class StarsIntroActivity extends GradientHeaderActivity implements Notifi
         balanceLayout.addView(giftButton, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.CENTER, 20, 8, 20, 0));
         if (readOnlyMode) {
             giftButton.setVisibility(View.GONE);
+
+            ButtonWithCounterView sendGiftButton = new ButtonWithCounterView(getContext(), false, resourceProvider);
+            sendGiftButton.setRound();
+            SpannableStringBuilder sendGiftText = new SpannableStringBuilder();
+            sendGiftText.append("G  ");
+            sendGiftText.setSpan(new ColoredImageSpan(R.drawable.settings_gift), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            sendGiftText.append(LocaleController.getString(R.string.SendAGift));
+            sendGiftButton.setText(sendGiftText, false);
+            sendGiftButton.setOnClickListener(v ->
+                    UserSelectorBottomSheet.open(0, BirthdayController.getInstance(currentAccount).getState()));
+            balanceLayout.addView(sendGiftButton, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 48, Gravity.CENTER, 20, 8, 20, 0));
         }
 
         updateBalance();
