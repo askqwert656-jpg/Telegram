@@ -2255,7 +2255,7 @@ public class MessagesStorage extends BaseController {
                     updateDialogsWithDeletedMessages(selfId, -selfId, mids, null);
                     AndroidUtilities.runOnUIThread(() -> {
                         getMessagesController().markDialogMessageAsDeleted(selfId, mids);
-                        getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, mids, 0L, false);
+                        getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, mids, 0L, false, selfId);
                     });
                 }
             } catch (Exception e) {
@@ -4427,7 +4427,7 @@ public class MessagesStorage extends BaseController {
                 updateDialogsWithDeletedMessagesInternal(dialogId, DialogObject.isChatDialog(dialogId) ? -dialogId : 0, mids, null);
                 getFileLoader().deleteFiles(filesToDelete, 0);
                 if (!mids.isEmpty()) {
-                    AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, mids, DialogObject.isChatDialog(dialogId) ? -dialogId : 0, false));
+                    AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, mids, DialogObject.isChatDialog(dialogId) ? -dialogId : 0, false, dialogId));
                 }
             } catch (Exception e) {
                 checkSQLException(e);
@@ -14645,7 +14645,7 @@ public class MessagesStorage extends BaseController {
                     for (int a = 0, N = dialogs.size(); a < N; a++) {
                         long dialogId = dialogs.keyAt(a);
                         ArrayList<Integer> mids = dialogs.valueAt(a);
-                        AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, mids, 0L, false));
+                        AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, mids, 0L, false, dialogId));
                         updateDialogsWithReadMessagesInternal(mids, null, null, null, null);
                         markMessagesAsDeletedInternal(dialogId, mids, true, 0, 0);
                         updateDialogsWithDeletedMessagesInternal(dialogId, 0, mids, null);
