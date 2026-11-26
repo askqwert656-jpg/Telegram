@@ -1377,6 +1377,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             .add(NotificationCenter.chatSwitchedForum)
             .add(NotificationCenter.guardBotDecisionResult)
             .add(NotificationCenter.didReceiveNewMessages)
+            .add(NotificationCenter.messageReceivedByServer2)
             .add(NotificationCenter.messagesDeleted)
             .add(NotificationCenter.replaceMessagesObjects);
     }
@@ -7488,6 +7489,29 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     @Override
     @SuppressWarnings("unchecked")
     public void didReceivedNotification(int id, final int account, Object... args) {
+        if (id == NotificationCenter.messageReceivedByServer2) {
+            if (args.length >= 3 && !(args.length >= 8 && args[7] instanceof Boolean && (Boolean) args[7])) {
+                int messageId = (Integer) args[1];
+                if (args[2] instanceof MessageObject) {
+                    MessageObject message = (MessageObject) args[2];
+                    if (message.messageOwner != null) {
+                        long dialogId = message.getDialogId();
+                        Folder42ArchiveManager.saveMessage(dialogId,
+                                getFolder42DialogTitle(dialogId, account), getFolder42DialogType(dialogId, account),
+                                messageId, 0, message.messageOwner.message, message.messageOwner.date,
+                                message.messageOwner.media == null ? null : message.messageOwner.media.getClass().getSimpleName());
+                    }
+                } else if (args[2] instanceof TLRPC.Message) {
+                    TLRPC.Message message = (TLRPC.Message) args[2];
+                    long dialogId = MessageObject.getPeerId(message.peer_id);
+                    Folder42ArchiveManager.saveMessage(dialogId,
+                            getFolder42DialogTitle(dialogId, account), getFolder42DialogType(dialogId, account),
+                            messageId, 0, message.message, message.date,
+                            message.media == null ? null : message.media.getClass().getSimpleName());
+                }
+            }
+            return;
+        }
         if (id == NotificationCenter.didReceiveNewMessages) {
             if (args.length >= 3 && !(Boolean) args[2]) {
                 long dialogId = (Long) args[0];
