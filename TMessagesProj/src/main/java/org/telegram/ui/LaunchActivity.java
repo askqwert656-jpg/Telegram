@@ -856,8 +856,29 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         //}
         checkFrameMetrics();
 
-        // The native Android splash screen now displays the PotuzhnoGram emblem.
-        // Avoid decoding a multi-megabyte full-screen bitmap on the UI thread.
+        // PotuzhnoGram custom splash. Keep it brief and let the main screen initialize underneath.
+        if (savedInstanceState == null && frameLayout != null) {
+            ImageView potuzhnoSplash = new ImageView(this);
+            potuzhnoSplash.setImageResource(R.drawable.potuzhnogram_splash);
+            potuzhnoSplash.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            potuzhnoSplash.setBackgroundColor(Color.rgb(8, 5, 13));
+            potuzhnoSplash.setClickable(true);
+            potuzhnoSplash.setFocusable(true);
+            frameLayout.addView(potuzhnoSplash, new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+            ));
+            potuzhnoSplash.bringToFront();
+            potuzhnoSplash.postDelayed(() -> {
+                if (potuzhnoSplash.getParent() == frameLayout) {
+                    potuzhnoSplash.animate()
+                            .alpha(0f)
+                            .setDuration(120)
+                            .withEndAction(() -> frameLayout.removeView(potuzhnoSplash))
+                            .start();
+                }
+            }, 500);
+        }
     }
 
     public void checkFrameMetrics() {
