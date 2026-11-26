@@ -252,6 +252,10 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         potuzhnoGramLogoView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         potuzhnoGramLogoView.setContentDescription("PotuzhnoGram");
         frameLayout2.addView(potuzhnoGramLogoView, LayoutHelper.createFrame(150, 150, Gravity.CENTER));
+        // The custom emblem replaces only the first intro page's Telegram mark.
+        // Keep the original animated intro artwork for all following pages.
+        textureView.setVisibility(View.GONE);
+        potuzhnoGramLogoView.setVisibility(View.VISIBLE);
         textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
             public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
@@ -316,6 +320,8 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
             @Override
             public void onPageSelected(int i) {
                 currentViewPagerPage = i;
+                textureView.setVisibility(i == 0 ? View.GONE : View.VISIBLE);
+                potuzhnoGramLogoView.setVisibility(i == 0 ? View.VISIBLE : View.GONE);
             }
 
             @Override
@@ -621,6 +627,8 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
             super.setPrimaryItem(container, position, object);
             bottomPages.setCurrentPage(position);
             currentViewPagerPage = position;
+            textureView.setVisibility(position == 0 ? View.GONE : View.VISIBLE);
+            potuzhnoGramLogoView.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
         }
 
         @Override
