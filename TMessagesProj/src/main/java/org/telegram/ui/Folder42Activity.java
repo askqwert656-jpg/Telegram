@@ -268,7 +268,7 @@ public class Folder42Activity extends BaseFragment {
                         .setNegativeButton("Отмена", null)
                         .setPositiveButton("Удалить", (dialog, which) -> databaseExecutor.execute(() -> {
                             Folder42Database.getInstance(context).folder42Dao().removeChat(chat.chatId);
-                            AndroidUtilities.runOnUIThread(this::loadChats);
+                            AndroidUtilities.runOnUIThread(Folder42Activity.this::loadChats);
                         })).show();
                 return true;
             });
