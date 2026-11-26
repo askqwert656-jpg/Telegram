@@ -126,7 +126,7 @@ public class Folder42Activity extends BaseFragment {
         emptyView.setTextSize(15);
         emptyView.setGravity(Gravity.CENTER);
         emptyView.setPadding(AndroidUtilities.dp(32), AndroidUtilities.dp(24), AndroidUtilities.dp(32), AndroidUtilities.dp(24));
-        root.addView(emptyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, 0, 104, 0, 0));
+        root.addView(emptyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, 0, 92, 0, 0));
         emptyView.setVisibility(View.GONE);
 
         fragmentView = root;
@@ -215,7 +215,7 @@ public class Folder42Activity extends BaseFragment {
             avatar.setTextColor(0xFFFFFFFF);
             avatar.setTextSize(21);
             avatar.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-            GradientDrawable avatarBackground = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{0xFF8067D8, 0xFFBD6BCB});
+            GradientDrawable avatarBackground = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{0xFF6252B5, 0xFF8067D8});
             avatarBackground.setShape(GradientDrawable.OVAL);
             avatar.setBackground(avatarBackground);
             row.addView(avatar, new LinearLayout.LayoutParams(AndroidUtilities.dp(54), AndroidUtilities.dp(54)));
