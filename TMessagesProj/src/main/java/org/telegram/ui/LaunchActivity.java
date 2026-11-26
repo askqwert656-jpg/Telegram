@@ -877,7 +877,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                             .withEndAction(() -> frameLayout.removeView(potuzhnoSplash))
                             .start();
                 }
-            }, 500);
+            }, 1400);
         }
     }
 
