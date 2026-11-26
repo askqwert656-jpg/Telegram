@@ -11,7 +11,6 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -53,7 +52,7 @@ public class Folder42Activity extends BaseFragment {
     public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
-        actionBar.setTitle("АРХИВ");
+        actionBar.setTitle("");
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
@@ -85,41 +84,37 @@ public class Folder42Activity extends BaseFragment {
         FrameLayout root = new FrameLayout(context);
         root.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
 
-        LinearLayout folderHeader = new LinearLayout(context);
-        folderHeader.setOrientation(LinearLayout.HORIZONTAL);
-        folderHeader.setGravity(Gravity.CENTER_VERTICAL);
-        folderHeader.setPadding(AndroidUtilities.dp(18), AndroidUtilities.dp(12), AndroidUtilities.dp(18), AndroidUtilities.dp(12));
-        folderHeader.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+        LinearLayout folderDescriptionRow = new LinearLayout(context);
+        folderDescriptionRow.setOrientation(LinearLayout.HORIZONTAL);
+        folderDescriptionRow.setGravity(Gravity.CENTER_VERTICAL);
+        folderDescriptionRow.setPadding(AndroidUtilities.dp(17), AndroidUtilities.dp(7), AndroidUtilities.dp(16), AndroidUtilities.dp(7));
 
-        ImageView folderIcon = new ImageView(context);
-        folderIcon.setImageResource(R.drawable.folder42);
-        folderIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        folderIcon.setContentDescription("Папка № 42");
-        folderHeader.addView(folderIcon, new LinearLayout.LayoutParams(AndroidUtilities.dp(64), AndroidUtilities.dp(64)));
+        View descriptionAccent = new View(context);
+        GradientDrawable accentDrawable = new GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{0xFFE15A78, 0xFF8067D8});
+        accentDrawable.setCornerRadius(AndroidUtilities.dp(2));
+        descriptionAccent.setBackground(accentDrawable);
+        folderDescriptionRow.addView(descriptionAccent,
+                new LinearLayout.LayoutParams(AndroidUtilities.dp(3), AndroidUtilities.dp(20)));
 
-        LinearLayout folderTitles = new LinearLayout(context);
-        folderTitles.setOrientation(LinearLayout.VERTICAL);
-        folderTitles.setPadding(AndroidUtilities.dp(16), 0, 0, 0);
-        TextView folderTitle = new TextView(context);
-        folderTitle.setText("42");
-        folderTitle.setTextSize(27);
-        folderTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        folderTitle.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        folderTitles.addView(folderTitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         TextView folderDescription = new TextView(context);
-        folderDescription.setText("Архив сбоев реальности. Не благодари, Морти.");
-        folderDescription.setTextSize(13);
-        folderDescription.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
-        folderDescription.setPadding(0, AndroidUtilities.dp(3), 0, 0);
-        folderTitles.addView(folderDescription, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        folderHeader.addView(folderTitles, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
-        root.addView(folderHeader, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP));
+        folderDescription.setText("42 причины не доверять кнопке “Удалить”.");
+        folderDescription.setTextSize(12);
+        folderDescription.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
+        folderDescription.setTextColor(0xFF8D7BE0);
+        folderDescription.setLetterSpacing(0.01f);
+        folderDescription.setPadding(AndroidUtilities.dp(10), 0, 0, 0);
+        folderDescriptionRow.addView(folderDescription,
+                new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        root.addView(folderDescriptionRow,
+                LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 42, Gravity.TOP));
 
         RecyclerView list = new RecyclerView(context);
         list.setLayoutManager(new LinearLayoutManager(context));
         adapter = new ChatAdapter();
         list.setAdapter(adapter);
-        root.addView(list, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, 0, 92, 0, 0));
+        root.addView(list, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, 0, 42, 0, 0));
 
         emptyView = new TextView(context);
         emptyView.setText("Переписки появятся здесь автоматически после редактирования или удаления сообщений.\nМожно также добавить чат вручную.");
