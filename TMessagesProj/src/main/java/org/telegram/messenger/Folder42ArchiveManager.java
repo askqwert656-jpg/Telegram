@@ -22,7 +22,7 @@ public final class Folder42ArchiveManager {
 
     private static boolean isOwnMessage(long senderId) {
         long selfId = UserConfig.getInstance(UserConfig.selectedAccount).getClientUserId();
-        return selfId != 0 && senderId == selfId;
+        return senderId == 0 || (selfId != 0 && senderId == selfId);
     }
 
 
