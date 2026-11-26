@@ -1,6 +1,7 @@
 package org.telegram.ui;
 
 import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
 import android.app.AlertDialog;
 import android.view.Gravity;
 import android.view.View;
@@ -64,7 +65,7 @@ public class Folder42ChatActivity extends BaseFragment {
         });
 
         FrameLayout root = new FrameLayout(context);
-        root.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+        root.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
 
         messageList = new RecyclerView(context);
         messageList.setLayoutManager(new LinearLayoutManager(context));
@@ -106,6 +107,17 @@ public class Folder42ChatActivity extends BaseFragment {
         });
     }
 
+    private void deleteArchivedMessage(ArchivedMessageEntity message) {
+        databaseExecutor.execute(() -> {
+            Folder42Database db = Folder42Database.getInstance(getParentActivity());
+            db.runInTransaction(() -> {
+                db.folder42Dao().removeEdits(message.recordId);
+                db.folder42Dao().removeMessage(message.recordId);
+            });
+            AndroidUtilities.runOnUIThread(this::loadMessages);
+        });
+    }
+
     private void showMessageHistory(ArchivedMessageEntity message) {
         databaseExecutor.execute(() -> {
             List<MessageEditEntity> edits = Folder42Database.getInstance(getParentActivity()).folder42Dao().getEdits(message.recordId);
@@ -119,7 +131,9 @@ public class Folder42ChatActivity extends BaseFragment {
                     }
                 }
                 if (message.deletedAt != null) history.append("\n\nСообщение удалено.");
-                new AlertDialog.Builder(context).setTitle("История сообщения").setMessage(history.toString()).setPositiveButton("Закрыть", null).show();
+                new AlertDialog.Builder(context).setTitle("Досье сообщения").setMessage(history.toString())
+                        .setNeutralButton("Удалить из архива", (dialog, which) -> deleteArchivedMessage(message))
+                        .setPositiveButton("Закрыть", null).show();
             });
         });
     }
@@ -143,7 +157,11 @@ public class Folder42ChatActivity extends BaseFragment {
         public MessageHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LinearLayout bubble = new LinearLayout(parent.getContext());
             bubble.setOrientation(LinearLayout.VERTICAL);
-            bubble.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(9), AndroidUtilities.dp(14), AndroidUtilities.dp(9));
+            bubble.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(11), AndroidUtilities.dp(14), AndroidUtilities.dp(10));
+            GradientDrawable bubbleBackground = new GradientDrawable();
+            bubbleBackground.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+            bubbleBackground.setCornerRadius(AndroidUtilities.dp(16));
+            bubble.setBackground(bubbleBackground);
             TextView body = new TextView(parent.getContext());
             body.setTextSize(15);
             body.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
@@ -158,14 +176,20 @@ public class Folder42ChatActivity extends BaseFragment {
         @Override
         public void onBindViewHolder(MessageHolder holder, int position) {
             ArchivedMessageEntity message = messages.get(position);
-            String body = message.text;
-            if (message.mediaMetadata != null && !message.mediaMetadata.isEmpty()) {
-                body = (body == null || body.isEmpty() ? "" : body + "\n") + "[Медиа: " + message.mediaMetadata + "]";
-            }
-            holder.body.setText(body);
+            holder.body.setText(message.text == null || message.text.isEmpty() ? "Сообщение без текста" : message.text);
             String date = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(message.date * 1000L));
-            holder.meta.setText(date + (message.deletedAt != null ? " · удалено" : (message.editedAt > 0 ? " · изменено" : "")));
+            String state = message.deletedAt != null ? "  ·  УДАЛЕНО" : (message.editedAt > 0 ? "  ·  ИЗМЕНЕНО" : "");
+            holder.meta.setText(date + state);
             holder.itemView.setOnClickListener(v -> showMessageHistory(message));
+            holder.itemView.setOnLongClickListener(v -> {
+                Context context = getParentActivity();
+                if (context != null) new AlertDialog.Builder(context)
+                        .setTitle("Удалить запись?")
+                        .setMessage("Запись и её история изменений будут удалены только из Папки № 42.")
+                        .setNegativeButton("Отмена", null)
+                        .setPositiveButton("Удалить", (dialog, which) -> deleteArchivedMessage(message)).show();
+                return true;
+            });
         }
 
         @Override
