@@ -2110,6 +2110,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
 
             chevronRight = new ImageView(context);
             chevronRight.setImageResource(R.drawable.msg_inputarrow);
+            chevronRight.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 
             LinearLayout countryButtonLinearLayout = new LinearLayout(context);
             countryButtonLinearLayout.setOrientation(HORIZONTAL);
