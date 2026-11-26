@@ -584,7 +584,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
             };
 
             ThemeBind.textColor(headerTextView, Theme.key_windowBackgroundWhiteBlackText);
-            headerTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 26);
+            headerTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26);
             headerTextView.setTypeface(AndroidUtilities.bold());
             headerTextView.setGravity(Gravity.CENTER);
             frameLayout.addView(headerTextView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP | Gravity.LEFT, 18, 244, 18, 0));
