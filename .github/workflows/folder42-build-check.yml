@@ -69,11 +69,45 @@ jobs:
           print("PotuzhnoGram Telegram API credentials configured.")
           PY
 
-      - name: Compile PotuzhnoGram debug APK
+      - name: Prepare and verify private signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          EXPECTED_CERT_SHA256: ${{ secrets.SIGNING_CERT_SHA256 }}
         run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_B64" || { echo "ERROR: SIGNING_KEYSTORE_BASE64 is missing"; exit 1; }
+          test -n "$STORE_PASSWORD" || { echo "ERROR: SIGNING_STORE_PASSWORD is missing"; exit 1; }
+          test -n "$KEY_PASSWORD" || { echo "ERROR: SIGNING_KEY_PASSWORD is missing"; exit 1; }
+          test -n "$EXPECTED_CERT_SHA256" || { echo "ERROR: SIGNING_CERT_SHA256 is missing"; exit 1; }
+
+          KEYSTORE="$GITHUB_WORKSPACE/TMessagesProj/config/release.keystore"
+          mkdir -p "$(dirname "$KEYSTORE")"
+          printf '%s' "$KEYSTORE_B64" | tr -d '\r\n ' | base64 --decode > "$KEYSTORE"
+          chmod 600 "$KEYSTORE"
+
+          ACTUAL_CERT_SHA256="$(keytool -list -v -keystore "$KEYSTORE" -alias potuzhogram -storepass "$STORE_PASSWORD" 2>/dev/null | awk '/SHA256:/{print $2; exit}' | tr -d ':' | tr '[:lower:]' '[:upper:]')"
+          EXPECTED_CERT_SHA256_NORMALIZED="$(printf '%s' "$EXPECTED_CERT_SHA256" | tr -d ':\r\n ' | tr '[:lower:]' '[:upper:]')"
+          if [[ -z "$ACTUAL_CERT_SHA256" || "$ACTUAL_CERT_SHA256" != "$EXPECTED_CERT_SHA256_NORMALIZED" ]]; then
+            echo "ERROR: Keystore certificate does not match SIGNING_CERT_SHA256."
+            exit 1
+          fi
+          echo "Debug signing certificate verified."
+
+      - name: Compile PotuzhnoGram debug APK
+        env:
+          STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
           echo "Building commit $GITHUB_SHA"
           chmod +x ./gradlew
-          ./gradlew :TMessagesProj_App:assembleAfatDebug --no-daemon --stacktrace -Dorg.gradle.jvmargs="-Xmx5g -XX:MaxMetaspaceSize=1g"
+          ./gradlew :TMessagesProj_App:assembleAfatDebug --no-daemon --stacktrace \
+            -PRELEASE_STORE_PASSWORD="$STORE_PASSWORD" \
+            -PRELEASE_KEY_PASSWORD="$KEY_PASSWORD" \
+            -PRELEASE_KEY_ALIAS="potuzhogram" \
+            -Dorg.gradle.jvmargs="-Xmx5g -XX:MaxMetaspaceSize=1g"
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
