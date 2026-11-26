@@ -44,6 +44,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -243,7 +244,14 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         frameContainerView.addView(frameLayout2, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 0, 78, 0, 0));
 
         TextureView textureView = new TextureView(context);
+        textureView.setVisibility(View.GONE);
         frameLayout2.addView(textureView, LayoutHelper.createFrame(ICON_WIDTH_DP, ICON_HEIGHT_DP, Gravity.CENTER));
+
+        ImageView potuzhnoGramLogoView = new ImageView(context);
+        potuzhnoGramLogoView.setImageResource(R.drawable.ic_launcher_foreground);
+        potuzhnoGramLogoView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        potuzhnoGramLogoView.setContentDescription("PotuzhnoGram");
+        frameLayout2.addView(potuzhnoGramLogoView, LayoutHelper.createFrame(150, 150, Gravity.CENTER));
         textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
             public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
