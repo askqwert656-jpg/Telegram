@@ -2146,7 +2146,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
 
             plusTextView = new TextView(context);
             plusTextView.setText("+");
-            plusTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+            plusTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
             plusTextView.setFocusable(false);
             linearLayout.addView(plusTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
 
