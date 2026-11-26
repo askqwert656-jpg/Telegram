@@ -152,6 +152,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
 
     @Override
     public View createView(Context context) {
+        titles[0] = LocaleController.getString(R.string.Page1Title);
 
 
         actionBar.setAddToContainer(false);
