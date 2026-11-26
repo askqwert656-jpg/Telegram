@@ -46,12 +46,40 @@ android {
         localeFilters += ["zz"]
     }
 
+    // Release credentials are supplied only by CI through Gradle properties
+    // (which are populated from GitHub Actions Secrets). Debug must not depend on them.
+    def releaseStorePassword = providers.gradleProperty('RELEASE_STORE_PASSWORD').orNull
+    def releaseKeyAlias = providers.gradleProperty('RELEASE_KEY_ALIAS').orNull
+    def releaseKeyPassword = providers.gradleProperty('RELEASE_KEY_PASSWORD').orNull
+
     signingConfigs {
         release {
             storeFile file("../TMessagesProj/config/release.keystore")
-            storePassword RELEASE_STORE_PASSWORD
-            keyAlias RELEASE_KEY_ALIAS
-            keyPassword RELEASE_KEY_PASSWORD
+            if (releaseStorePassword != null) {
+                storePassword releaseStorePassword
+            }
+            if (releaseKeyAlias != null) {
+                keyAlias releaseKeyAlias
+            }
+            if (releaseKeyPassword != null) {
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
+
+    gradle.taskGraph.whenReady { graph ->
+        def needsReleaseSigning = graph.allTasks.any { task ->
+            task.project == project && (task.name.toLowerCase().contains('release') || task.name.toLowerCase().contains('standalone'))
+        }
+        if (needsReleaseSigning) {
+            def missing = []
+            if (!releaseStorePassword) missing << 'RELEASE_STORE_PASSWORD'
+            if (!releaseKeyAlias) missing << 'RELEASE_KEY_ALIAS'
+            if (!releaseKeyPassword) missing << 'RELEASE_KEY_PASSWORD'
+            if (!file("../TMessagesProj/config/release.keystore").exists()) missing << 'release.keystore'
+            if (!missing.isEmpty()) {
+                throw new GradleException("Release signing is not configured. Missing: " + missing.join(', ') + ". Configure GitHub Actions Secrets.")
+            }
         }
     }
 
