@@ -7503,11 +7503,13 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     }
                 } else if (args[2] instanceof TLRPC.Message) {
                     TLRPC.Message message = (TLRPC.Message) args[2];
-                    long dialogId = MessageObject.getPeerId(message.peer_id);
-                    Folder42ArchiveManager.saveMessage(dialogId,
-                            getFolder42DialogTitle(dialogId, account), getFolder42DialogType(dialogId, account),
-                            messageId, 0, message.message, message.date,
-                            message.media == null ? null : message.media.getClass().getSimpleName());
+                    if (message.peer_id != null) {
+                        long dialogId = MessageObject.getPeerId(message.peer_id);
+                        Folder42ArchiveManager.saveMessage(dialogId,
+                                getFolder42DialogTitle(dialogId, account), getFolder42DialogType(dialogId, account),
+                                messageId, 0, message.message, message.date,
+                                message.media == null ? null : message.media.getClass().getSimpleName());
+                    }
                 }
             }
             return;
