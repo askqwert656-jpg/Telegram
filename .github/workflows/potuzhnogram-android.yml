@@ -136,10 +136,16 @@ jobs:
             -Dorg.gradle.jvmargs="-Xmx5g -XX:MaxMetaspaceSize=1g"
 
       - name: Build PotuzhnoGram debug APK (Folder 42 check)
+        env:
+          STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          ORG_GRADLE_PROJECT_RELEASE_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          ORG_GRADLE_PROJECT_RELEASE_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          ORG_GRADLE_PROJECT_RELEASE_KEY_ALIAS: potuzhogram
         run: |
           set -euo pipefail
-          ./gradlew :TMessagesProj_App:assembleAfatDebug \\
-            --no-daemon --stacktrace \\
+          ./gradlew :TMessagesProj_App:assembleAfatDebug \
+            --no-daemon --stacktrace \
             -Dorg.gradle.jvmargs="-Xmx5g -XX:MaxMetaspaceSize=1g"
 
       - name: Upload signed release APK
