@@ -7515,7 +7515,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     for (MessageObject message : messages) {
                         if (message != null && message.messageOwner != null) {
                             Folder42ArchiveManager.recordEdit(dialogId, title, chatType,
-                                    message.getId(), message.messageOwner.message, message.messageOwner.edit_date * 1000L);
+                                    message.getId(), message.messageOwner.message,
+                                    message.messageOwner.date, message.messageOwner.edit_date * 1000L);
                         }
                     }
                 }
