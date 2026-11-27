@@ -4567,7 +4567,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             } else if (position == setAvatarRow) {
                 onWriteButtonClick();
             } else if (position == starsRow) {
-                presentFragment(new StarsIntroActivity());
+                presentFragment(new StarsIntroActivity(true));
             } else if (position == tonRow) {
                 presentFragment(new TONIntroActivity());
             } else if (position == giftsRow) {
@@ -13976,7 +13976,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     } else if (position == starsRow) {
                         StarsController c = StarsController.getInstance(currentAccount);
                         long balance = c.getBalance().amount;
-                        textCell.setTextAndValueAndIcon(LocaleController.getString(R.string.MenuTelegramStars), c.balanceAvailable() && balance > 0 ? StarsIntroActivity.formatStarsAmount(c.getBalance(), 0.85f, ' ') : "", new AnimatedEmojiDrawable.WrapSizeDrawable(PremiumGradient.getInstance().goldenStarMenuDrawable, dp(24), dp(24)), true);
+                        textCell.setTextAndValueAndIcon(LocaleController.getString(R.string.PotuzhnoGramStarsAndGifts), c.balanceAvailable() && balance > 0 ? StarsIntroActivity.formatStarsAmount(c.getBalance(), 0.85f, ' ') : "", new AnimatedEmojiDrawable.WrapSizeDrawable(PremiumGradient.getInstance().goldenStarMenuDrawable, dp(24), dp(24)), true);
                         textCell.setImageLeft(23);
                     } else if (position == tonRow) {
                         StarsController c = StarsController.getTonInstance(currentAccount);
