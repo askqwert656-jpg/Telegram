@@ -786,7 +786,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         items.add(SettingCell.Factory.of(10, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_language, getString(R.string.SettingsLanguage), LocaleController.getCurrentLanguageName()));
 
         items.add(UItem.asShadow(null));
-        items.add(UItem.asHeader("PotuzhnoGram"));
+        items.add(UItem.asHeader(getString(R.string.TelegramStars)));
         items.add(SettingCell.Factory.of(12, 0xFFFFC04D, 0xFFE99A24, R.drawable.menu_stars_gift, getString(R.string.PotuzhnoGramStarsAndGifts), getString(R.string.PotuzhnoGramStarsAndGiftsInfo)));
         items.add(UItem.asShadow(null));
         StarsController.getInstance(currentAccount, true).getBalance();
@@ -902,6 +902,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 presentSettingFragment(new LanguageSelectActivity());
                 break;
 
+            case 12:
+                presentSettingFragment(new StarsIntroActivity());
+                break;
             case 13:
                 presentSettingFragment(new TONIntroActivity());
                 break;

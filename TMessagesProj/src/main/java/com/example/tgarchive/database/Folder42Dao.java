@@ -46,6 +46,12 @@ public interface Folder42Dao {
     @Query("UPDATE folder42_messages SET deleted_at = :deletedAt WHERE chat_id = :chatId AND message_id = :messageId")
     int markMessageDeleted(String chatId, long messageId, long deletedAt);
 
+    @Query("DELETE FROM folder42_message_edits WHERE message_record_id IN (SELECT record_id FROM folder42_messages WHERE date < :cutoff)")
+    int deleteEditsBefore(long cutoff);
+
+    @Query("DELETE FROM folder42_messages WHERE date < :cutoff")
+    int deleteMessagesBefore(long cutoff);
+
     @Query("SELECT * FROM folder42_message_edits WHERE message_record_id = :messageRecordId ORDER BY edited_at ASC")
     List<MessageEditEntity> getEdits(String messageRecordId);
 

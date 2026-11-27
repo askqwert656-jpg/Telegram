@@ -16,8 +16,38 @@ import java.util.concurrent.Executors;
  */
 public final class Folder42ArchiveManager {
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private static final String PREFS = "folder42_archive_settings";
+    private static final String KEY_RETENTION_DAYS = "retention_days";
 
     private Folder42ArchiveManager() {
+    }
+
+    public static int getRetentionDays(android.content.Context context) {
+        return context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE).getInt(KEY_RETENTION_DAYS, 0);
+    }
+
+    public static void setRetentionDays(android.content.Context context, int days) {
+        context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE).edit().putInt(KEY_RETENTION_DAYS, Math.max(0, days)).apply();
+    }
+
+    public static void cleanupExpiredMessages(android.content.Context context) {
+        if (context == null || getRetentionDays(context) <= 0) return;
+        final long cutoff = System.currentTimeMillis() / 1000L - getRetentionDays(context) * 86400L;
+        executor.execute(() -> {
+            Folder42Database db = Folder42Database.getInstance(context.getApplicationContext());
+            db.runInTransaction(() -> {
+                db.folder42Dao().deleteEditsBefore(cutoff);
+                db.folder42Dao().deleteMessagesBefore(cutoff);
+            });
+        });
+    }
+
+    private static void cleanupExpiredMessagesNow(Folder42Database db) {
+        int days = ApplicationLoader.applicationContext.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE).getInt(KEY_RETENTION_DAYS, 0);
+        if (days <= 0) return;
+        long cutoff = System.currentTimeMillis() / 1000L - days * 86400L;
+        db.folder42Dao().deleteEditsBefore(cutoff);
+        db.folder42Dao().deleteMessagesBefore(cutoff);
     }
 
 
@@ -31,6 +61,7 @@ public final class Folder42ArchiveManager {
         final String safeText = text == null ? "" : text;
         executor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
+            cleanupExpiredMessagesNow(db);
             db.runInTransaction(() -> {
                 db.folder42Dao().insertChat(new ArchivedChatEntity(
                         chatId, safeTitle, chatType, System.currentTimeMillis(), System.currentTimeMillis(), false));
@@ -51,6 +82,7 @@ public final class Folder42ArchiveManager {
         final String safeText = newText == null ? "" : newText;
         executor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
+            cleanupExpiredMessagesNow(db);
             final boolean[] changed = {false};
             db.runInTransaction(() -> {
                 ArchivedMessageEntity previous = db.folder42Dao().getMessage(chatId, messageId);
@@ -105,6 +137,7 @@ public final class Folder42ArchiveManager {
         final String safeTitle = TextUtils.isEmpty(chatTitle) ? "Переписка " + chatId : chatTitle;
         executor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
+            cleanupExpiredMessagesNow(db);
             ArchivedMessageEntity existing = db.folder42Dao().getMessage(chatId, messageId);
             if (existing == null || existing.deletedAt != null) {
                 return;

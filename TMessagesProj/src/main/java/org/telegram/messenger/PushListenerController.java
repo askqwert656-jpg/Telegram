@@ -423,7 +423,9 @@ public class PushListenerController {
                             LongSparseArray<ArrayList<Integer>> deletedMessages = new LongSparseArray<>();
                             ArrayList<Integer> ids = new ArrayList<>();
                             for (int a = 0; a < messagesArgs.length; a++) {
-                                ids.add(Utilities.parseInt(messagesArgs[a]));
+                                int deletedMessageId = Utilities.parseInt(messagesArgs[a]);
+                                ids.add(deletedMessageId);
+                                Folder42ArchiveManager.recordDeleteByMessageId(deletedMessageId, channel_id, null, channel_id != 0 ? 1 : 0);
                             }
                             deletedMessages.put(-channel_id, ids);
                             NotificationsController.getInstance(currentAccount).removeDeletedMessagesFromNotifications(deletedMessages, false);

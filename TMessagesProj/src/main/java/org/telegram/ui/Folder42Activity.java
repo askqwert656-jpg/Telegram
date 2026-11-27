@@ -25,6 +25,7 @@ import com.example.tgarchive.database.Folder42Database;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.Folder42Notifications;
+import org.telegram.messenger.Folder42ArchiveManager;
 import org.telegram.messenger.R;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.tgnet.TLRPC;
@@ -34,6 +35,8 @@ import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.LayoutHelper;
+import org.telegram.ui.Components.AvatarDrawable;
+import org.telegram.ui.Components.BackupImageView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +78,9 @@ public class Folder42Activity extends BaseFragment {
                     }
                     Toast.makeText(context, enabled ? "Уведомления Папки № 42 включены" : "Уведомления Папки № 42 отключены", Toast.LENGTH_SHORT).show();
                 });
+        org.telegram.ui.ActionBar.ActionBarMenuItem retentionItem = menu.addItem(3, R.drawable.msg_settings);
+        retentionItem.setContentDescription("Срок хранения переписок");
+        retentionItem.setOnClickListener(v -> showRetentionDialog(context));
         if (Folder42Notifications.areEnabled(context) && Folder42Notifications.shouldRequestPermission(context) && getParentActivity() != null) {
             ActivityCompat.requestPermissions(getParentActivity(),
                     new String[]{Manifest.permission.POST_NOTIFICATIONS}, 42042);
@@ -134,6 +140,24 @@ public class Folder42Activity extends BaseFragment {
         return fragmentView;
     }
 
+    private void showRetentionDialog(Context context) {
+        final int[] days = new int[]{0, 7, 30, 90, 180, 365};
+        final String[] labels = new String[]{"Бессрочно", "7 дней", "30 дней", "90 дней", "180 дней", "365 дней"};
+        int selected = 0;
+        int current = Folder42ArchiveManager.getRetentionDays(context);
+        for (int i = 0; i < days.length; i++) if (days[i] == current) selected = i;
+        new AlertDialog.Builder(context)
+                .setTitle("Хранить переписки")
+                .setSingleChoiceItems(labels, selected, (dialog, which) -> {
+                    Folder42ArchiveManager.setRetentionDays(context, days[which]);
+                    Folder42ArchiveManager.cleanupExpiredMessages(context);
+                    Toast.makeText(context, days[which] == 0 ? "Хранение без ограничения" : "Срок хранения: " + labels[which], Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                })
+                .setNegativeButton("Закрыть", null)
+                .show();
+    }
+
     private void openChatPicker() {
         Bundle args = new Bundle();
         args.putBoolean("onlySelect", true);
@@ -176,6 +200,7 @@ public class Folder42Activity extends BaseFragment {
     }
 
     private void loadChats() {
+        if (getParentActivity() != null) Folder42ArchiveManager.cleanupExpiredMessages(getParentActivity());
         databaseExecutor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(getParentActivity());
             List<ArchivedChatEntity> result = db.folder42Dao().getChats();
@@ -211,15 +236,21 @@ public class Folder42Activity extends BaseFragment {
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
             row.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(10), AndroidUtilities.dp(16), AndroidUtilities.dp(10));
-            TextView avatar = new TextView(parent.getContext());
-            avatar.setGravity(Gravity.CENTER);
-            avatar.setTextColor(0xFFFFFFFF);
-            avatar.setTextSize(21);
-            avatar.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            FrameLayout avatarContainer = new FrameLayout(parent.getContext());
+            BackupImageView avatar = new BackupImageView(parent.getContext());
+            avatar.setRoundRadius(AndroidUtilities.dp(27));
+            avatar.getImageReceiver().setCurrentAccount(currentAccount);
+            avatarContainer.addView(avatar, LayoutHelper.createFrame(54, 54));
+            TextView fallbackAvatar = new TextView(parent.getContext());
+            fallbackAvatar.setGravity(Gravity.CENTER);
+            fallbackAvatar.setTextColor(0xFFFFFFFF);
+            fallbackAvatar.setTextSize(21);
+            fallbackAvatar.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             GradientDrawable avatarBackground = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{0xFF6252B5, 0xFF8067D8});
             avatarBackground.setShape(GradientDrawable.OVAL);
-            avatar.setBackground(avatarBackground);
-            row.addView(avatar, new LinearLayout.LayoutParams(AndroidUtilities.dp(54), AndroidUtilities.dp(54)));
+            fallbackAvatar.setBackground(avatarBackground);
+            avatarContainer.addView(fallbackAvatar, LayoutHelper.createFrame(54, 54));
+            row.addView(avatarContainer, new LinearLayout.LayoutParams(AndroidUtilities.dp(54), AndroidUtilities.dp(54)));
             LinearLayout texts = new LinearLayout(parent.getContext());
             texts.setOrientation(LinearLayout.VERTICAL);
             texts.setGravity(Gravity.CENTER_VERTICAL);
@@ -240,7 +271,7 @@ public class Folder42Activity extends BaseFragment {
             wrapper.setOrientation(LinearLayout.VERTICAL);
             wrapper.addView(row, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             wrapper.addView(divider, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(1)));
-            return new ChatHolder(wrapper, avatar, title, subtitle);
+            return new ChatHolder(wrapper, avatar, fallbackAvatar, title, subtitle);
         }
 
         @Override
@@ -249,7 +280,26 @@ public class Folder42Activity extends BaseFragment {
             holder.title.setText(chat.title);
             holder.subtitle.setText(chat.chatType == 2 ? "Канал · сохранённые события" : chat.chatType == 1 ? "Группа · сохранённые события" : "Личная переписка · сохранённые события");
             String name = chat.title == null ? "?" : chat.title.trim();
-            holder.avatar.setText(name.isEmpty() ? "?" : name.substring(0, 1).toUpperCase(java.util.Locale.getDefault()));
+            holder.fallbackAvatar.setText(name.isEmpty() ? "?" : name.substring(0, 1).toUpperCase(java.util.Locale.getDefault()));
+            holder.fallbackAvatar.setVisibility(View.VISIBLE);
+            long dialogId = 0;
+            try { dialogId = Long.parseLong(chat.chatId); } catch (Exception ignore) { }
+            AvatarDrawable avatarDrawable = new AvatarDrawable();
+            if (dialogId > 0) {
+                TLRPC.User user = getMessagesController().getUser(dialogId);
+                if (user != null) {
+                    avatarDrawable.setInfo(user);
+                    holder.avatar.setForUserOrChat(user, avatarDrawable);
+                    holder.fallbackAvatar.setVisibility(View.GONE);
+                }
+            } else if (dialogId < 0) {
+                TLRPC.Chat telegramChat = getMessagesController().getChat(-dialogId);
+                if (telegramChat != null) {
+                    avatarDrawable.setInfo(telegramChat);
+                    holder.avatar.setForUserOrChat(telegramChat, avatarDrawable);
+                    holder.fallbackAvatar.setVisibility(View.GONE);
+                }
+            }
             holder.itemView.setOnClickListener(v -> presentFragment(new Folder42ChatActivity(chat.chatId, chat.title)));
             holder.itemView.setOnLongClickListener(v -> {
                 Context context = getParentActivity();
@@ -273,12 +323,14 @@ public class Folder42Activity extends BaseFragment {
     }
 
     private static class ChatHolder extends RecyclerView.ViewHolder {
-        final TextView avatar;
+        final BackupImageView avatar;
+        final TextView fallbackAvatar;
         final TextView title;
         final TextView subtitle;
-        ChatHolder(View itemView, TextView avatar, TextView title, TextView subtitle) {
+        ChatHolder(View itemView, BackupImageView avatar, TextView fallbackAvatar, TextView title, TextView subtitle) {
             super(itemView);
             this.avatar = avatar;
+            this.fallbackAvatar = fallbackAvatar;
             this.title = title;
             this.subtitle = subtitle;
         }
