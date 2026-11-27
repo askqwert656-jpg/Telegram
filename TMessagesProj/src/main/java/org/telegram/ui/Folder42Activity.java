@@ -26,7 +26,6 @@ import com.example.tgarchive.database.Folder42Database;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.Folder42Notifications;
 import org.telegram.messenger.R;
-import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.tgnet.TLRPC;
 import android.os.Bundle;
@@ -87,7 +86,7 @@ public class Folder42Activity extends BaseFragment {
         LinearLayout folderDescriptionRow = new LinearLayout(context);
         folderDescriptionRow.setOrientation(LinearLayout.HORIZONTAL);
         folderDescriptionRow.setGravity(Gravity.CENTER_VERTICAL);
-        folderDescriptionRow.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(6), AndroidUtilities.dp(14), AndroidUtilities.dp(6));
+        folderDescriptionRow.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(4), AndroidUtilities.dp(14), AndroidUtilities.dp(4));
         GradientDrawable descriptionBackground = new GradientDrawable();
         descriptionBackground.setColor(0xFF171322);
         descriptionBackground.setCornerRadius(AndroidUtilities.dp(7));
@@ -101,7 +100,7 @@ public class Folder42Activity extends BaseFragment {
         accentDrawable.setCornerRadius(AndroidUtilities.dp(2));
         descriptionAccent.setBackground(accentDrawable);
         folderDescriptionRow.addView(descriptionAccent,
-                new LinearLayout.LayoutParams(AndroidUtilities.dp(3), AndroidUtilities.dp(20)));
+                new LinearLayout.LayoutParams(AndroidUtilities.dp(3), AndroidUtilities.dp(18)));
 
         TextView folderDescription = new TextView(context);
         folderDescription.setText("42 причины не доверять кнопке “Удалить”.");
@@ -113,13 +112,13 @@ public class Folder42Activity extends BaseFragment {
         folderDescriptionRow.addView(folderDescription,
                 new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         root.addView(folderDescriptionRow,
-                LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 40, Gravity.TOP));
+                LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 36, Gravity.TOP));
 
         RecyclerView list = new RecyclerView(context);
         list.setLayoutManager(new LinearLayoutManager(context));
         adapter = new ChatAdapter();
         list.setAdapter(adapter);
-        root.addView(list, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, AndroidUtilities.dp(8), 40, AndroidUtilities.dp(8), 0));
+        root.addView(list, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, AndroidUtilities.dp(6), 36, AndroidUtilities.dp(6), 0));
 
         emptyView = new TextView(context);
         emptyView.setText("Переписки появятся здесь автоматически после редактирования или удаления сообщений.\nМожно также добавить чат вручную.");
@@ -179,13 +178,6 @@ public class Folder42Activity extends BaseFragment {
     private void loadChats() {
         databaseExecutor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(getParentActivity());
-            long selfId = UserConfig.getInstance(UserConfig.selectedAccount).getClientUserId();
-            if (selfId != 0) {
-                db.runInTransaction(() -> {
-                    db.folder42Dao().removeEditsFromSender(selfId);
-                    db.folder42Dao().removeMessagesFromSender(selfId);
-                });
-            }
             List<ArchivedChatEntity> result = db.folder42Dao().getChats();
             AndroidUtilities.runOnUIThread(() -> {
                 if (adapter == null || fragmentView == null) return;
@@ -218,7 +210,7 @@ public class Folder42Activity extends BaseFragment {
             LinearLayout row = new LinearLayout(parent.getContext());
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(10), AndroidUtilities.dp(16), AndroidUtilities.dp(10));
+            row.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(8), AndroidUtilities.dp(14), AndroidUtilities.dp(8));
             TextView avatar = new TextView(parent.getContext());
             avatar.setGravity(Gravity.CENTER);
             avatar.setTextColor(0xFFFFFFFF);
@@ -227,20 +219,20 @@ public class Folder42Activity extends BaseFragment {
             GradientDrawable avatarBackground = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{0xFF6252B5, 0xFF8067D8});
             avatarBackground.setShape(GradientDrawable.OVAL);
             avatar.setBackground(avatarBackground);
-            row.addView(avatar, new LinearLayout.LayoutParams(AndroidUtilities.dp(54), AndroidUtilities.dp(54)));
+            row.addView(avatar, new LinearLayout.LayoutParams(AndroidUtilities.dp(48), AndroidUtilities.dp(48)));
             LinearLayout texts = new LinearLayout(parent.getContext());
             texts.setOrientation(LinearLayout.VERTICAL);
             texts.setGravity(Gravity.CENTER_VERTICAL);
-            texts.setPadding(AndroidUtilities.dp(14), 0, 0, 0);
+            texts.setPadding(AndroidUtilities.dp(12), 0, 0, 0);
             TextView title = new TextView(parent.getContext());
-            title.setTextSize(16);
+            title.setTextSize(15);
             title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             title.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-            texts.addView(title, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(26)));
+            texts.addView(title, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(24)));
             TextView subtitle = new TextView(parent.getContext());
-            subtitle.setTextSize(13);
+            subtitle.setTextSize(12);
             subtitle.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
-            texts.addView(subtitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(22)));
+            texts.addView(subtitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(19)));
             row.addView(texts, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
             View divider = new View(parent.getContext());
             divider.setBackgroundColor(Theme.getColor(Theme.key_divider));
