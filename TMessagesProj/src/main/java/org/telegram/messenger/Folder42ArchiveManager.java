@@ -20,15 +20,10 @@ public final class Folder42ArchiveManager {
     private Folder42ArchiveManager() {
     }
 
-    private static boolean isOwnMessage(long senderId) {
-        long selfId = UserConfig.getInstance(UserConfig.selectedAccount).getClientUserId();
-        return senderId == 0 || (selfId != 0 && senderId == selfId);
-    }
-
 
     public static void saveMessage(long dialogId, String chatTitle, int chatType,
                                    long messageId, long senderId, String text, long date, String mediaMetadata) {
-        if (dialogId == 0 || messageId == 0 || ApplicationLoader.applicationContext == null || isOwnMessage(senderId)) {
+        if (dialogId == 0 || messageId == 0 || ApplicationLoader.applicationContext == null) {
             return;
         }
         final String chatId = String.valueOf(dialogId);
@@ -61,7 +56,7 @@ public final class Folder42ArchiveManager {
                 ArchivedMessageEntity previous = db.folder42Dao().getMessage(chatId, messageId);
                 // Without a pre-edit copy we cannot identify the author reliably.
                 // Never create a speculative record for an unknown sender.
-                if (previous == null || isOwnMessage(previous.senderId)) {
+                if (previous == null) {
                     return;
                 }
                 if (TextUtils.equals(previous.text, safeText)) {
@@ -111,7 +106,7 @@ public final class Folder42ArchiveManager {
         executor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
             ArchivedMessageEntity existing = db.folder42Dao().getMessage(chatId, messageId);
-            if (existing == null || existing.deletedAt != null || isOwnMessage(existing.senderId)) {
+            if (existing == null || existing.deletedAt != null) {
                 return;
             }
             long eventTime = deletedAt > 0 ? deletedAt : System.currentTimeMillis();
