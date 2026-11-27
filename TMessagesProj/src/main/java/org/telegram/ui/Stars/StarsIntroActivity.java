@@ -568,17 +568,7 @@ public class StarsIntroActivity extends GradientHeaderActivity implements Notifi
         }
         final StarsController controller = StarsController.getInstance(currentAccount);
         final int received = profileGifts == null ? 0 : profileGifts.getTotalCount();
-        int sold = 0;
-        for (TL_stars.StarsTransaction transaction : controller.transactions[StarsController.ALL_TRANSACTIONS]) {
-            if (transaction == null || transaction.refund || transaction.failed || transaction.pending) {
-                continue;
-            }
-            if (transaction.stargift_resale && transaction.amount.positive()
-                    || transaction.offer && transaction.amount.negative()) {
-                sold++;
-            }
-        }
-        giftStatsTextView.setText(LocaleController.formatString(R.string.PotuzhnoGramGiftStats, received, sold));
+        giftStatsTextView.setText(LocaleController.formatString(R.string.PotuzhnoGramGiftStats, received));
     }
 
     private boolean twoButtons;
@@ -911,11 +901,6 @@ public class StarsIntroActivity extends GradientHeaderActivity implements Notifi
         }
 
         items.add(UItem.asShadow(null));
-
-        if (getMessagesController().starrefConnectAllowed) {
-            items.add(AffiliateProgramFragment.ColorfulTextCell.Factory.as(BUTTON_AFFILIATE, getThemedColor(Theme.key_color_green), R.drawable.filled_earn_stars, applyNewSpan(getString(R.string.UserAffiliateProgramRowTitle)), getString(R.string.UserAffiliateProgramRowText)));
-            items.add(UItem.asShadow(null));
-        }
 
         if (c.hasSubscriptions()) {
             items.add(UItem.asHeader(getString(R.string.StarMySubscriptions)));
