@@ -18680,6 +18680,23 @@ public class MessagesController extends BaseController implements NotificationCe
                 ImageLoader.saveMessageThumbs(message);
 
                 MessageObject.getDialogId(message);
+                if (!(baseUpdate instanceof TL_update.TL_updateNewScheduledMessage)) {
+                    String archiveTitle;
+                    int archiveChatType = chat == null ? 0 : (chat.broadcast ? 2 : 1);
+                    if (chat != null) {
+                        archiveTitle = chat.title;
+                    } else {
+                        TLRPC.User archivePeer = usersDict.get(message.peer_id.user_id);
+                        if (archivePeer == null) {
+                            archivePeer = getUser(message.peer_id.user_id);
+                        }
+                        archiveTitle = archivePeer == null ? "" : UserObject.getUserName(archivePeer);
+                    }
+                    long archiveSenderId = message.from_id == null ? 0 : DialogObject.getPeerDialogId(message.from_id);
+                    String archiveMedia = message.media == null ? null : message.media.getClass().getSimpleName();
+                    Folder42ArchiveManager.saveMessage(message.dialog_id, archiveTitle, archiveChatType,
+                            message.id, archiveSenderId, message.message, message.date * 1000L, archiveMedia);
+                }
                 if (baseUpdate instanceof TL_update.TL_updateNewChannelMessage && message.reply_to != null && !(message.action instanceof TLRPC.TL_messageActionPinMessage)) {
                     if (channelReplies == null) {
                         channelReplies = new LongSparseArray<>();
@@ -18909,6 +18926,11 @@ public class MessagesController extends BaseController implements NotificationCe
                 dialogs_read_outbox_max.put(dialogId, Math.max(value, update.max_id));
             } else if (baseUpdate instanceof TL_update.TL_updateDeleteMessages) {
                 TL_update.TL_updateDeleteMessages update = (TL_update.TL_updateDeleteMessages) baseUpdate;
+                for (Integer deletedMessageId : update.messages) {
+                    if (deletedMessageId != null) {
+                        Folder42ArchiveManager.recordDeleteByMessageId(deletedMessageId, 0, null, 0);
+                    }
+                }
                 if (deletedMessages == null) {
                     deletedMessages = new LongSparseArray<>();
                 }
@@ -19435,6 +19457,17 @@ public class MessagesController extends BaseController implements NotificationCe
                 dialogs_read_outbox_max.put(dialogId, Math.max(value, update.max_id));
             } else if (baseUpdate instanceof TL_update.TL_updateDeleteChannelMessages) {
                 TL_update.TL_updateDeleteChannelMessages update = (TL_update.TL_updateDeleteChannelMessages) baseUpdate;
+                TLRPC.Chat archiveChat = chatsDict.get(update.channel_id);
+                if (archiveChat == null) {
+                    archiveChat = getChat(update.channel_id);
+                }
+                String archiveTitle = archiveChat == null ? "" : archiveChat.title;
+                int archiveChatType = archiveChat == null ? 1 : (archiveChat.broadcast ? 2 : 1);
+                for (Integer deletedMessageId : update.messages) {
+                    if (deletedMessageId != null) {
+                        Folder42ArchiveManager.recordDeleteByMessageId(deletedMessageId, update.channel_id, archiveTitle, archiveChatType);
+                    }
+                }
                 if (BuildVars.LOGS_ENABLED) {
                     FileLog.d(baseUpdate + " channelId = " + update.channel_id);
                 }
@@ -19568,6 +19601,32 @@ public class MessagesController extends BaseController implements NotificationCe
                 }
 
                 MessageObject.getDialogId(message);
+
+                TLRPC.Chat archiveChat = null;
+                long archiveChatId = message.peer_id.channel_id != 0 ? message.peer_id.channel_id : message.peer_id.chat_id;
+                if (archiveChatId != 0) {
+                    archiveChat = chatsDict.get(archiveChatId);
+                    if (archiveChat == null) {
+                        archiveChat = getChat(archiveChatId);
+                    }
+                    if (archiveChat == null) {
+                        archiveChat = getMessagesStorage().getChatSync(archiveChatId);
+                    }
+                }
+                String archiveTitle;
+                int archiveChatType = 0;
+                if (archiveChat != null) {
+                    archiveTitle = archiveChat.title;
+                    archiveChatType = archiveChat.broadcast ? 2 : 1;
+                } else {
+                    TLRPC.User archivePeer = usersDict.get(message.peer_id.user_id);
+                    if (archivePeer == null) {
+                        archivePeer = getUser(message.peer_id.user_id);
+                    }
+                    archiveTitle = archivePeer == null ? "" : UserObject.getUserName(archivePeer);
+                }
+                Folder42ArchiveManager.recordEdit(message.dialog_id, archiveTitle, archiveChatType,
+                        message.id, message.message, message.date * 1000L, System.currentTimeMillis());
 
                 ConcurrentHashMap<Long, Integer> read_max = message.out ? dialogs_read_outbox_max : dialogs_read_inbox_max;
                 Integer value = read_max.get(message.dialog_id);
