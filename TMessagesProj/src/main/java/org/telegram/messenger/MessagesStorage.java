@@ -10187,7 +10187,7 @@ public class MessagesStorage extends BaseController {
             try {
                 long currentUserId = getUserConfig().clientUserId;
                 cursor = database.queryFinalized(
-                        "SELECT data, mid, date, out FROM messages_v2 WHERE uid = ? AND mid > 0 ORDER BY date ASC, mid ASC",
+                        "SELECT data, mid, date, out FROM messages_v2 WHERE uid = ? AND mid != 0 ORDER BY date ASC, mid ASC",
                         dialogId);
                 while (cursor.next()) {
                     NativeByteBuffer data = cursor.byteBufferValue(0);
