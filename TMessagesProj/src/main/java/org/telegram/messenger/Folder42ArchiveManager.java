@@ -33,16 +33,19 @@ public final class Folder42ArchiveManager {
     }
 
     public static void cleanupExpiredMessages(android.content.Context context) {
-        if (context == null || getRetentionDays(context) <= 0) return;
-        final long cutoff = System.currentTimeMillis() / 1000L - getRetentionDays(context) * 86400L;
+        if (context == null) return;
+        final int retentionDays = getRetentionDays(context);
+        final long cutoff = retentionDays > 0 ? System.currentTimeMillis() / 1000L - retentionDays * 86400L : 0;
         executor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(context.getApplicationContext());
             db.runInTransaction(() -> {
                 long ownUserId = UserConfig.getInstance(UserConfig.selectedAccount).clientUserId;
                 db.folder42Dao().removeEditsFromSender(ownUserId);
                 db.folder42Dao().removeMessagesFromSender(ownUserId);
-                db.folder42Dao().deleteEditsBefore(cutoff);
-                db.folder42Dao().deleteMessagesBefore(cutoff);
+                if (retentionDays > 0) {
+                    db.folder42Dao().deleteEditsBefore(cutoff);
+                    db.folder42Dao().deleteMessagesBefore(cutoff);
+                }
             });
         });
     }
@@ -96,10 +99,9 @@ public final class Folder42ArchiveManager {
                 long now = System.currentTimeMillis();
                 db.folder42Dao().insertOrUpdateChat(new ArchivedChatEntity(
                         chatId, safeTitle, chatType, now, now, true));
+                db.folder42Dao().clearFullMessages(chatId);
                 for (TLRPC.Message message : messages) {
                     if (message == null || message.id == 0) continue;
-                    ArchivedMessageEntity eventRecord = db.folder42Dao().getMessage(chatId, message.id);
-                    if (eventRecord != null) continue;
                     long senderId = ownUserId;
                     if (message.from_id != null) {
                         if (message.from_id.user_id != 0) senderId = message.from_id.user_id;
@@ -110,6 +112,8 @@ public final class Folder42ArchiveManager {
                     }
                     String body = message.message == null ? "" : message.message;
                     String media = message.media == null ? null : message.media.getClass().getSimpleName();
+                    if (TextUtils.isEmpty(body) && media != null) body = "Медиа: " + media;
+                    if (TextUtils.isEmpty(body)) body = "Сообщение без текста";
                     db.folder42Dao().insertMessage(new ArchivedMessageEntity(
                             "full:" + chatId + ":" + message.id, chatId, message.id, senderId,
                             body, message.date, 0, null, media, 1));

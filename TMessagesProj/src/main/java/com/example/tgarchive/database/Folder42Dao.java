@@ -28,8 +28,14 @@ public interface Folder42Dao {
     @Query("SELECT * FROM folder42_chats WHERE chat_id = :chatId LIMIT 1")
     ArchivedChatEntity getChat(String chatId);
 
-    @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId ORDER BY date DESC")
+    @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId AND archive_type = 0 AND (deleted_at IS NOT NULL OR edited_at > 0) ORDER BY date DESC")
     List<ArchivedMessageEntity> getMessages(String chatId);
+
+    @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId AND archive_type = 1 ORDER BY date DESC")
+    List<ArchivedMessageEntity> getFullMessages(String chatId);
+
+    @Query("DELETE FROM folder42_messages WHERE chat_id = :chatId AND archive_type = 1")
+    int clearFullMessages(String chatId);
 
     @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId AND message_id = :messageId AND archive_type = 0 LIMIT 1")
     ArchivedMessageEntity getMessage(String chatId, long messageId);

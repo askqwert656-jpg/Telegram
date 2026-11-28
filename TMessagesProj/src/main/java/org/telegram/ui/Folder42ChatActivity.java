@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.tgarchive.database.ArchivedMessageEntity;
 import com.example.tgarchive.database.Folder42Database;
+import com.example.tgarchive.database.Folder42Dao;
 import com.example.tgarchive.database.MessageEditEntity;
 
 import org.telegram.messenger.AndroidUtilities;
@@ -42,6 +43,9 @@ public class Folder42ChatActivity extends BaseFragment {
     private MessageAdapter adapter;
     private RecyclerView messageList;
     private TextView emptyView;
+    private TextView eventsTab;
+    private TextView fullCopyTab;
+    private boolean showingFullCopy;
 
     public Folder42ChatActivity(String chatId, String chatTitle) {
         this(chatId, chatTitle, 0);
@@ -68,18 +72,44 @@ public class Folder42ChatActivity extends BaseFragment {
         FrameLayout root = new FrameLayout(context);
         root.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
 
+        LinearLayout tabs = new LinearLayout(context);
+        tabs.setOrientation(LinearLayout.HORIZONTAL);
+        tabs.setGravity(Gravity.CENTER);
+        eventsTab = new TextView(context);
+        eventsTab.setText("Удаления и изменения");
+        eventsTab.setGravity(Gravity.CENTER);
+        eventsTab.setTextSize(13);
+        eventsTab.setOnClickListener(v -> {
+            showingFullCopy = false;
+            updateTabs();
+            loadMessages();
+        });
+        fullCopyTab = new TextView(context);
+        fullCopyTab.setText("Полная копия");
+        fullCopyTab.setGravity(Gravity.CENTER);
+        fullCopyTab.setTextSize(13);
+        fullCopyTab.setOnClickListener(v -> {
+            showingFullCopy = true;
+            updateTabs();
+            loadMessages();
+        });
+        tabs.addView(eventsTab, new LinearLayout.LayoutParams(0, AndroidUtilities.dp(44), 1));
+        tabs.addView(fullCopyTab, new LinearLayout.LayoutParams(0, AndroidUtilities.dp(44), 1));
+        root.addView(tabs, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 44, Gravity.TOP));
+        updateTabs();
+
         messageList = new RecyclerView(context);
         messageList.setLayoutManager(new LinearLayoutManager(context));
         adapter = new MessageAdapter();
         messageList.setAdapter(adapter);
-        root.addView(messageList, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        root.addView(messageList, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, 0, 44, 0, 0));
 
         emptyView = new TextView(context);
-        emptyView.setText("В этой переписке пока нет сохранённых сообщений.");
+        emptyView.setText("Здесь пока нет сохранённых удалений или изменений.");
         emptyView.setTextSize(14);
         emptyView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
         emptyView.setGravity(Gravity.CENTER);
-        root.addView(emptyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        root.addView(emptyView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, Gravity.TOP, 0, 44, 0, 0));
         emptyView.setVisibility(View.GONE);
 
         fragmentView = root;
@@ -87,15 +117,31 @@ public class Folder42ChatActivity extends BaseFragment {
         return fragmentView;
     }
 
+    private void updateTabs() {
+        if (eventsTab == null || fullCopyTab == null) return;
+        int selected = Theme.getColor(Theme.key_windowBackgroundWhiteBlackText);
+        int normal = Theme.getColor(Theme.key_windowBackgroundWhiteGrayText);
+        eventsTab.setTextColor(showingFullCopy ? normal : selected);
+        fullCopyTab.setTextColor(showingFullCopy ? selected : normal);
+        eventsTab.setTypeface(null, showingFullCopy ? android.graphics.Typeface.NORMAL : android.graphics.Typeface.BOLD);
+        fullCopyTab.setTypeface(null, showingFullCopy ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+    }
+
     private void loadMessages() {
         databaseExecutor.execute(() -> {
-            List<ArchivedMessageEntity> result = Folder42Database.getInstance(getParentActivity()).folder42Dao().getMessages(chatId);
+            Folder42Dao dao = Folder42Database.getInstance(getParentActivity()).folder42Dao();
+            List<ArchivedMessageEntity> result = showingFullCopy ? dao.getFullMessages(chatId) : dao.getMessages(chatId);
             AndroidUtilities.runOnUIThread(() -> {
                 if (adapter == null || fragmentView == null) return;
                 messages.clear();
                 if (result != null) messages.addAll(result);
                 adapter.notifyDataSetChanged();
-                if (emptyView != null) emptyView.setVisibility(messages.isEmpty() ? View.VISIBLE : View.GONE);
+                if (emptyView != null) {
+                    emptyView.setText(showingFullCopy
+                            ? "Полная копия ещё не сохранена. Нажми «+» в Папке № 42."
+                            : "Здесь пока нет удалённых или изменённых сообщений собеседника.");
+                    emptyView.setVisibility(messages.isEmpty() ? View.VISIBLE : View.GONE);
+                }
                 if (targetMessageId != 0 && messageList != null) {
                     for (int i = 0; i < messages.size(); i++) {
                         if (messages.get(i).messageId == targetMessageId) {
