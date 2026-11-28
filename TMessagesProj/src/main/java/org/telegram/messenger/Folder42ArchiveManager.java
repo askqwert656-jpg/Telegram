@@ -74,13 +74,31 @@ public final class Folder42ArchiveManager {
         executor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
             cleanupExpiredMessagesNow(db);
+            final boolean[] changed = {false};
             db.runInTransaction(() -> {
+                long now = System.currentTimeMillis();
                 db.folder42Dao().insertChat(new ArchivedChatEntity(
-                        chatId, safeTitle, chatType, System.currentTimeMillis(), System.currentTimeMillis(), false));
-                db.folder42Dao().insertMessage(new ArchivedMessageEntity(
-                        chatId + ":" + messageId, chatId, messageId, senderId, safeText,
-                        date, 0, null, mediaMetadata));
+                        chatId, safeTitle, chatType, now, now, false));
+                ArchivedMessageEntity previous = db.folder42Dao().getMessage(chatId, messageId);
+                if (previous == null) {
+                    db.folder42Dao().insertMessage(new ArchivedMessageEntity(
+                            chatId + ":" + messageId, chatId, messageId, senderId, safeText,
+                            date, 0, null, mediaMetadata));
+                } else if (previous.archiveType == 0 && previous.deletedAt == null &&
+                        !TextUtils.equals(previous.text, safeText)) {
+                    long eventTime = System.currentTimeMillis();
+                    String eventId = chatId + ":" + messageId + ":edit:" + eventTime + ":" + safeText.hashCode();
+                    db.folder42Dao().insertEdit(new MessageEditEntity(
+                            eventId, previous.recordId, previous.text, safeText, eventTime));
+                    db.folder42Dao().updateMessageText(chatId, messageId, safeText, eventTime);
+                    db.folder42Dao().activateChat(chatId, safeTitle, chatType, eventTime);
+                    changed[0] = true;
+                }
             });
+            if (changed[0]) {
+                Folder42Notifications.notifyMessageChanged(ApplicationLoader.applicationContext,
+                        safeTitle, false, dialogId, (int) messageId);
+            }
         });
     }
 
@@ -195,14 +213,17 @@ public final class Folder42ArchiveManager {
                     existing.senderId == UserConfig.getInstance(UserConfig.selectedAccount).clientUserId) {
                 return;
             }
+            ArchivedChatEntity archivedChat = db.folder42Dao().getChat(chatId);
+            String notificationTitle = TextUtils.isEmpty(chatTitle) && archivedChat != null ? archivedChat.title : safeTitle;
+            int resolvedChatType = archivedChat != null ? archivedChat.chatType : chatType;
             long eventTime = deletedAt > 0 ? deletedAt : System.currentTimeMillis();
             int updated = db.folder42Dao().markMessageDeleted(chatId, messageId, eventTime);
             if (updated == 0) {
                 return;
             }
-            db.folder42Dao().activateChat(chatId, safeTitle, chatType, eventTime);
+            db.folder42Dao().activateChat(chatId, notificationTitle, resolvedChatType, eventTime);
             Folder42Notifications.notifyMessageChanged(ApplicationLoader.applicationContext,
-                    safeTitle, true, dialogId, (int) messageId);
+                    notificationTitle, true, dialogId, (int) messageId);
         });
     }
 }

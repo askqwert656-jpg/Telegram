@@ -31,7 +31,7 @@ public interface Folder42Dao {
     @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId AND archive_type = 0 AND (deleted_at IS NOT NULL OR edited_at > 0) ORDER BY date DESC")
     List<ArchivedMessageEntity> getMessages(String chatId);
 
-    @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId AND archive_type = 1 ORDER BY date DESC")
+    @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId AND archive_type = 1 ORDER BY date ASC, message_id ASC")
     List<ArchivedMessageEntity> getFullMessages(String chatId);
 
     @Query("DELETE FROM folder42_messages WHERE chat_id = :chatId AND archive_type = 1")

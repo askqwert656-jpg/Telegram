@@ -10187,7 +10187,7 @@ public class MessagesStorage extends BaseController {
             try {
                 long currentUserId = getUserConfig().clientUserId;
                 cursor = database.queryFinalized(
-                        "SELECT data, mid, date, out FROM messages_v2 WHERE uid = ? ORDER BY date ASC, mid ASC",
+                        "SELECT data, mid, date, out FROM messages_v2 WHERE uid = ? AND mid > 0 ORDER BY date ASC, mid ASC",
                         dialogId);
                 while (cursor.next()) {
                     NativeByteBuffer data = cursor.byteBufferValue(0);
@@ -12086,6 +12086,34 @@ public class MessagesStorage extends BaseController {
 
     }
 
+    private void saveFolder42Baselines(ArrayList<TLRPC.Message> messages) {
+        if (messages == null || messages.isEmpty()) return;
+        final long selfId = getUserConfig().getClientUserId();
+        for (TLRPC.Message message : messages) {
+            if (message == null || message.id <= 0) continue;
+            long dialogId = MessageObject.getDialogId(message);
+            if (dialogId == 0 || DialogObject.isEncryptedDialog(dialogId)) continue;
+            long senderId = message.out ? selfId : (message.from_id != null
+                    ? DialogObject.getPeerDialogId(message.from_id)
+                    : (dialogId > 0 ? dialogId : 0));
+            String title = "";
+            int chatType = 0;
+            if (dialogId > 0) {
+                TLRPC.User user = getMessagesController().getUser(dialogId);
+                if (user != null) title = UserObject.getUserName(user);
+            } else {
+                TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
+                if (chat != null) {
+                    title = chat.title;
+                    chatType = chat.broadcast ? 2 : 1;
+                }
+            }
+            String media = message.media == null ? null : message.media.getClass().getSimpleName();
+            Folder42ArchiveManager.saveMessage(dialogId, title, chatType, message.id,
+                    senderId, message.message, message.date, media);
+        }
+    }
+
     private void putMessagesInternal(ArrayList<TLRPC.Message> messages, boolean withTransaction, boolean doNotUpdateDialogDate, int downloadMask, boolean ifNoLastMessage, int mode, long threadMessageId) {
         if (messages != null) {
             ArrayList<TL_ephemeral.EphemeralMessage> ephemeralMessages = null;
@@ -12130,6 +12158,7 @@ public class MessagesStorage extends BaseController {
                 }
             }
             if (messages != null && mode == ChatActivity.MODE_DEFAULT) {
+                saveFolder42Baselines(messages);
                 int currentTime = -1;
                 for (int i = 0; i < messages.size(); ++i) {
                     TLRPC.Message msg = messages.get(i);
@@ -14834,6 +14863,7 @@ public class MessagesStorage extends BaseController {
                     while (cursor.next()) {
                         long did = cursor.longValue(0);
                         int mid = cursor.intValue(5);
+                        Folder42ArchiveManager.recordDelete(did, null, did < 0 ? 1 : 0, mid, System.currentTimeMillis());
                         unknownMessages.remove((Integer) mid);
                         ArrayList<Integer> mids = messagesByDialogs.get(did);
                         if (mids == null) {
