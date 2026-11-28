@@ -94,9 +94,9 @@ public class Folder42Activity extends BaseFragment {
         folderDescriptionRow.setGravity(Gravity.CENTER_VERTICAL);
         folderDescriptionRow.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(6), AndroidUtilities.dp(14), AndroidUtilities.dp(6));
         GradientDrawable descriptionBackground = new GradientDrawable();
-        descriptionBackground.setColor(0xFF171322);
+        descriptionBackground.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
         descriptionBackground.setCornerRadius(AndroidUtilities.dp(7));
-        descriptionBackground.setStroke(AndroidUtilities.dp(1), 0x665F4A91);
+        descriptionBackground.setStroke(AndroidUtilities.dp(1), Theme.getColor(Theme.key_divider));
         folderDescriptionRow.setBackground(descriptionBackground);
 
         View descriptionAccent = new View(context);
@@ -112,7 +112,7 @@ public class Folder42Activity extends BaseFragment {
         folderDescription.setText("42 причины не доверять кнопке “Удалить”.");
         folderDescription.setTextSize(12);
         folderDescription.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-        folderDescription.setTextColor(0xFFC2A9FF);
+        folderDescription.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         folderDescription.setLetterSpacing(0.025f);
         folderDescription.setPadding(AndroidUtilities.dp(10), 0, 0, 0);
         folderDescriptionRow.addView(folderDescription,
