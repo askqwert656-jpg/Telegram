@@ -115,6 +115,14 @@ public final class Folder42ArchiveManager {
         if (media == null) return null;
         String mediaType = media.getClass().getSimpleName();
         File source = FileLoader.getInstance(account).getPathToMessage(message, false);
+        boolean canDownload = media instanceof TLRPC.TL_messageMediaDocument
+                || media instanceof TLRPC.TL_messageMediaPhoto
+                || media instanceof TLRPC.TL_messageMediaWebPage
+                && (((TLRPC.TL_messageMediaWebPage) media).webpage.document != null
+                || ((TLRPC.TL_messageMediaWebPage) media).webpage.photo != null);
+        if (!source.isFile() && !canDownload) {
+            return mediaType + "|not_supported";
+        }
         if (!source.isFile()) {
             try {
                 if (media instanceof TLRPC.TL_messageMediaDocument) {
