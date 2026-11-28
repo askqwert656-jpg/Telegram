@@ -1,6 +1,9 @@
 package org.telegram.ui;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.webkit.MimeTypeMap;
 import android.graphics.drawable.GradientDrawable;
 import android.app.AlertDialog;
 import android.view.Gravity;
@@ -12,6 +15,7 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.core.content.FileProvider;
 
 import com.example.tgarchive.database.ArchivedMessageEntity;
 import com.example.tgarchive.database.Folder42Database;
@@ -26,6 +30,7 @@ import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.LayoutHelper;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -154,6 +159,30 @@ public class Folder42ChatActivity extends BaseFragment {
         });
     }
 
+    private String getArchivedMediaPath(String metadata) {
+        if (metadata == null) return null;
+        int separator = metadata.indexOf('|');
+        if (separator < 0 || separator == metadata.length() - 1) return null;
+        String path = metadata.substring(separator + 1);
+        File file = new File(path);
+        return file.isFile() ? path : null;
+    }
+
+    private void openArchivedMedia(Context context, String path) {
+        try {
+            File file = new File(path);
+            Uri uri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
+            String extension = MimeTypeMap.getFileExtensionFromUrl(file.getName());
+            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(uri, mimeType == null ? "*/*" : mimeType);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            android.widget.Toast.makeText(context, "Не удалось открыть вложение", android.widget.Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void deleteArchivedMessage(ArchivedMessageEntity message) {
         databaseExecutor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(getParentActivity());
@@ -179,10 +208,22 @@ public class Folder42ChatActivity extends BaseFragment {
                 }
                 if (message.archiveType == 1) {
                     String author = message.senderId == UserConfig.getInstance(currentAccount).clientUserId ? "Вы" : "Собеседник";
-                    new AlertDialog.Builder(context).setTitle("Полная копия переписки")
-                            .setMessage("Отправитель: " + author + "\n\n" + (message.text == null ? "" : message.text))
-                            .setNeutralButton("Удалить из копии", (dialog, which) -> deleteArchivedMessage(message))
-                            .setPositiveButton("Закрыть", null).show();
+                    String mediaPath = getArchivedMediaPath(message.mediaMetadata);
+                    String details = "Отправитель: " + author + "\n\n" + (message.text == null ? "" : message.text);
+                    if (mediaPath != null) {
+                        details += "\n\nВложение сохранено отдельно.";
+                    } else if (message.mediaMetadata != null && message.mediaMetadata.contains("|not_downloaded")) {
+                        details += "\n\nВложение не удалось загрузить при создании копии.";
+                    }
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(context)
+                            .setTitle("Полная копия переписки")
+                            .setMessage(details)
+                            .setNegativeButton("Удалить из копии", (d, which) -> deleteArchivedMessage(message))
+                            .setPositiveButton("Закрыть", null);
+                    if (mediaPath != null) {
+                        dialog.setNeutralButton("Открыть вложение", (d, which) -> openArchivedMedia(context, mediaPath));
+                    }
+                    dialog.show();
                     return;
                 }
                 if (message.deletedAt != null) history.append("\n\nСообщение удалено.");
