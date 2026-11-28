@@ -24,6 +24,7 @@ import com.example.tgarchive.database.ArchivedChatEntity;
 import com.example.tgarchive.database.Folder42Database;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.messenger.Folder42Notifications;
 import org.telegram.messenger.Folder42ArchiveManager;
 import org.telegram.messenger.R;
@@ -186,23 +187,82 @@ public class Folder42Activity extends BaseFragment {
                 if (title.isEmpty()) title = "Чат " + chatId;
                 final String savedTitle = title;
                 final int savedType = chatType;
-                MessagesStorage.getInstance(currentAccount).getFolder42Conversation(dialogId, (messages, hasUnloadedHistory) -> {
-                    Folder42ArchiveManager.saveFullConversation(currentAccount, dialogId, savedTitle, savedType, messages, () -> {
-                        loadChats();
-                        Context parent = getParentActivity();
-                        if (parent != null) {
-                            String result = hasUnloadedHistory
-                                    ? "Сохранено " + messages.size() + " сообщений. Часть истории ещё не загружена Telegram."
-                                    : "Сохранена полная копия: " + messages.size() + " сообщений.";
-                            Toast.makeText(parent, result, Toast.LENGTH_LONG).show();
-                        }
-                    });
-                });
+                loadFullConversationFromServer(dialogId, savedTitle, savedType);
             }
             fragment.finishFragment();
             return true;
         });
         presentFragment(picker);
+    }
+
+    private void loadFullConversationFromServer(long dialogId, String chatTitle, int chatType) {
+        Context context = getParentActivity();
+        if (context != null) {
+            Toast.makeText(context, "Загружаю историю переписки с Telegram…", Toast.LENGTH_SHORT).show();
+        }
+        ArrayList<TLRPC.Message> messages = new ArrayList<>();
+        loadFullConversationPage(dialogId, chatTitle, chatType, 0, messages);
+    }
+
+    private void loadFullConversationPage(long dialogId, String chatTitle, int chatType,
+                                          int offsetMessageId, ArrayList<TLRPC.Message> messages) {
+        final int pageSize = 100;
+        final int maxMessages = 10000;
+        try {
+            TLRPC.InputPeer peer = getMessagesController().getInputPeer(dialogId);
+            if (peer == null) {
+                finishFullConversationSave(dialogId, chatTitle, chatType, messages, true);
+                return;
+            }
+            TLRPC.TL_messages_getHistory request = new TLRPC.TL_messages_getHistory();
+            request.peer = peer;
+            request.offset_id = offsetMessageId;
+            request.offset_date = 0;
+            request.add_offset = 0;
+            request.limit = pageSize;
+            request.max_id = 0;
+            request.min_id = 0;
+            request.hash = 0;
+            ConnectionsManager.getInstance(currentAccount).sendRequest(request, (response, error) -> {
+                if (!(response instanceof TLRPC.messages_Messages)) {
+                    AndroidUtilities.runOnUIThread(() ->
+                            finishFullConversationSave(dialogId, chatTitle, chatType, messages, true));
+                    return;
+                }
+                TLRPC.messages_Messages page = (TLRPC.messages_Messages) response;
+                ArrayList<TLRPC.Message> pageMessages = page.messages;
+                if (pageMessages != null && !pageMessages.isEmpty()) {
+                    messages.addAll(pageMessages);
+                    int nextOffset = pageMessages.get(pageMessages.size() - 1).id;
+                    if (pageMessages.size() == pageSize && nextOffset != 0 && messages.size() < maxMessages) {
+                        loadFullConversationPage(dialogId, chatTitle, chatType, nextOffset, messages);
+                        return;
+                    }
+                    boolean truncated = messages.size() >= maxMessages && pageMessages.size() == pageSize;
+                    finishFullConversationSave(dialogId, chatTitle, chatType, messages, truncated);
+                } else {
+                    finishFullConversationSave(dialogId, chatTitle, chatType, messages, false);
+                }
+            });
+        } catch (Exception e) {
+            org.telegram.messenger.FileLog.e(e);
+            finishFullConversationSave(dialogId, chatTitle, chatType, messages, true);
+        }
+    }
+
+    private void finishFullConversationSave(long dialogId, String chatTitle, int chatType,
+                                           ArrayList<TLRPC.Message> messages, boolean incomplete) {
+        java.util.Collections.reverse(messages);
+        Folder42ArchiveManager.saveFullConversation(currentAccount, dialogId, chatTitle, chatType, messages, () -> {
+            loadChats();
+            Context parent = getParentActivity();
+            if (parent != null) {
+                String result = incomplete
+                        ? "Сохранено " + messages.size() + " сообщений. История может быть неполной — проверь подключение."
+                        : "Сохранена история переписки: " + messages.size() + " сообщений.";
+                Toast.makeText(parent, result, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void loadChats() {
