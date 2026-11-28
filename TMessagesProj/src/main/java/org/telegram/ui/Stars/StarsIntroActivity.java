@@ -570,7 +570,11 @@ public class StarsIntroActivity extends GradientHeaderActivity implements Notifi
         }
         final StarsController controller = StarsController.getInstance(currentAccount);
         final int received = profileGifts == null ? 0 : profileGifts.getTotalCount();
-        giftStatsTextView.setText(LocaleController.formatString(R.string.PotuzhnoGramGiftStats, received));
+        final int transactions = controller.transactions[StarsController.ALL_TRANSACTIONS].size();
+        final String gifts = LocaleController.formatString(R.string.PotuzhnoGramGiftStats, received);
+        final String stars = "Звёзды: " + LocaleController.formatNumber(controller.getBalance().amount, ' ')
+                + " · операций в загруженной истории: " + transactions;
+        giftStatsTextView.setText(gifts + "\n" + stars);
     }
 
     private boolean twoButtons;
