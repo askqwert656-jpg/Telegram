@@ -9,8 +9,16 @@ import com.example.tgarchive.database.MessageEditEntity;
 
 import org.telegram.tgnet.TLRPC;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Local persistence entry points for Folder 42 events.
@@ -102,6 +110,69 @@ public final class Folder42ArchiveManager {
         });
     }
 
+    private static String archiveMessageMedia(int account, long dialogId, TLRPC.Message message) {
+        TLRPC.MessageMedia media = MessageObject.getMedia(message);
+        if (media == null) return null;
+        String mediaType = media.getClass().getSimpleName();
+        File source = FileLoader.getInstance(account).getPathToMessage(message, false);
+        if (!source.isFile()) {
+            try {
+                if (media instanceof TLRPC.TL_messageMediaDocument) {
+                    FileLoader.getInstance(account).loadFile(((TLRPC.TL_messageMediaDocument) media).document, message, 1, 0);
+                } else if (media instanceof TLRPC.TL_messageMediaPhoto) {
+                    TLRPC.Photo photo = ((TLRPC.TL_messageMediaPhoto) media).photo;
+                    TLRPC.PhotoSize size = FileLoader.getClosestPhotoSizeWithSize(
+                            photo.sizes, AndroidUtilities.getPhotoSize(true), false, null, true);
+                    if (size != null) {
+                        FileLoader.getInstance(account).loadFile(ImageLocation.getForObject(size, photo), message, null, 1, 0);
+                    }
+                } else if (media instanceof TLRPC.TL_messageMediaWebPage) {
+                    TLRPC.WebPage page = ((TLRPC.TL_messageMediaWebPage) media).webpage;
+                    if (page.document != null) {
+                        FileLoader.getInstance(account).loadFile(page.document, message, 1, 0);
+                    } else if (page.photo != null) {
+                        TLRPC.PhotoSize size = FileLoader.getClosestPhotoSizeWithSize(
+                                page.photo.sizes, AndroidUtilities.getPhotoSize(true), false, null, true);
+                        if (size != null) {
+                            FileLoader.getInstance(account).loadFile(ImageLocation.getForObject(size, page.photo), message, null, 1, 0);
+                        }
+                    }
+                }
+                long deadline = System.currentTimeMillis() + 45000;
+                while (!source.isFile() && System.currentTimeMillis() < deadline) {
+                    Thread.sleep(250);
+                }
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
+        }
+        if (!source.isFile() || source.length() <= 0) {
+            return mediaType + "|not_downloaded";
+        }
+        try {
+            File root = new File(ApplicationLoader.applicationContext.getFilesDir(), "folder42_media/" + dialogId);
+            if (!root.exists() && !root.mkdirs()) {
+                return mediaType + "|not_saved";
+            }
+            File destination = new File(root, message.id + "_" + source.getName());
+            if (!destination.isFile() || destination.length() != source.length()) {
+                try (FileInputStream input = new FileInputStream(source);
+                     FileOutputStream output = new FileOutputStream(destination)) {
+                    byte[] buffer = new byte[64 * 1024];
+                    int read;
+                    while ((read = input.read(buffer)) != -1) {
+                        output.write(buffer, 0, read);
+                    }
+                    output.getFD().sync();
+                }
+            }
+            return mediaType + "|" + destination.getAbsolutePath();
+        } catch (Exception e) {
+            FileLog.e(e);
+            return mediaType + "|not_saved";
+        }
+    }
+
     public static void saveFullConversation(int account, long dialogId, String chatTitle, int chatType,
                                             java.util.ArrayList<TLRPC.Message> messages, Runnable completion) {
         if (dialogId == 0 || messages == null || ApplicationLoader.applicationContext == null) {
@@ -113,30 +184,54 @@ public final class Folder42ArchiveManager {
         final long ownUserId = UserConfig.getInstance(account).clientUserId;
         executor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
-            db.runInTransaction(() -> {
-                long now = System.currentTimeMillis();
-                db.folder42Dao().insertOrUpdateChat(new ArchivedChatEntity(
-                        chatId, safeTitle, chatType, now, now, true));
-                db.folder42Dao().clearFullMessages(chatId);
+            Map<Integer, Future<String>> mediaTasks = new HashMap<>();
+            ExecutorService mediaExecutor = Executors.newFixedThreadPool(3);
+            try {
                 for (TLRPC.Message message : messages) {
-                    if (message == null || message.id == 0) continue;
-                    long senderId = ownUserId;
-                    if (message.from_id != null) {
-                        if (message.from_id.user_id != 0) senderId = message.from_id.user_id;
-                        else if (message.from_id.channel_id != 0) senderId = -message.from_id.channel_id;
-                        else if (message.from_id.chat_id != 0) senderId = -message.from_id.chat_id;
-                    } else if (!message.out && dialogId > 0) {
-                        senderId = dialogId;
-                    }
-                    String body = message.message == null ? "" : message.message;
-                    String media = message.media == null ? null : message.media.getClass().getSimpleName();
-                    if (TextUtils.isEmpty(body) && media != null) body = "Медиа: " + media;
-                    if (TextUtils.isEmpty(body)) body = "Сообщение без текста";
-                    db.folder42Dao().insertMessage(new ArchivedMessageEntity(
-                            "full:" + chatId + ":" + message.id, chatId, message.id, senderId,
-                            body, message.date, 0, null, media, 1));
+                    if (message == null || message.id == 0 || MessageObject.getMedia(message) == null) continue;
+                    mediaTasks.put(message.id, mediaExecutor.submit(() -> archiveMessageMedia(account, dialogId, message)));
                 }
-            });
+                long mediaDeadline = System.currentTimeMillis() + 90000;
+                Map<Integer, String> mediaFiles = new HashMap<>();
+                for (Map.Entry<Integer, Future<String>> entry : mediaTasks.entrySet()) {
+                    long remaining = mediaDeadline - System.currentTimeMillis();
+                    if (remaining <= 0) break;
+                    try {
+                        mediaFiles.put(entry.getKey(), entry.getValue().get(remaining, TimeUnit.MILLISECONDS));
+                    } catch (Exception e) {
+                        entry.getValue().cancel(true);
+                    }
+                }
+                db.runInTransaction(() -> {
+                    long now = System.currentTimeMillis();
+                    db.folder42Dao().insertOrUpdateChat(new ArchivedChatEntity(
+                            chatId, safeTitle, chatType, now, now, true));
+                    db.folder42Dao().clearFullMessages(chatId);
+                    for (TLRPC.Message message : messages) {
+                        if (message == null || message.id == 0) continue;
+                        long senderId = ownUserId;
+                        if (message.from_id != null) {
+                            if (message.from_id.user_id != 0) senderId = message.from_id.user_id;
+                            else if (message.from_id.channel_id != 0) senderId = -message.from_id.channel_id;
+                            else if (message.from_id.chat_id != 0) senderId = -message.from_id.chat_id;
+                        } else if (!message.out && dialogId > 0) {
+                            senderId = dialogId;
+                        }
+                        String body = message.message == null ? "" : message.message;
+                        String media = mediaFiles.get(message.id);
+                        if (media == null && MessageObject.getMedia(message) != null) {
+                            media = MessageObject.getMedia(message).getClass().getSimpleName() + "|not_downloaded";
+                        }
+                        if (TextUtils.isEmpty(body) && media != null) body = "Вложение: " + media.substring(0, media.indexOf('|') >= 0 ? media.indexOf('|') : media.length());
+                        if (TextUtils.isEmpty(body)) body = "Сообщение без текста";
+                        db.folder42Dao().insertMessage(new ArchivedMessageEntity(
+                                "full:" + chatId + ":" + message.id, chatId, message.id, senderId,
+                                body, message.date, 0, null, media, 1));
+                    }
+                });
+            } finally {
+                mediaExecutor.shutdownNow();
+            }
             if (completion != null) AndroidUtilities.runOnUIThread(completion);
         });
     }
