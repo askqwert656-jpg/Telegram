@@ -460,8 +460,18 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         versionView.setPadding(dp(21), dp(10), dp(21), dp(10));
         versionView.setGravity(Gravity.CENTER);
         ThemeBind.selectorBackground(versionView, Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), Theme.RIPPLE_MASK_ALL), null, ThemeBind.of(Theme.key_listSelector), getResourceProvider());
-        // Debug menu is intentionally unavailable in the public PotuzhnoGram UI.
-        versionView.setOnClickListener(null);
+        versionView.setOnClickListener(v -> {
+            versionViewPressCount++;
+            if (versionViewPressCount < 2 && !BuildVars.DEBUG_PRIVATE_VERSION) {
+                try {
+                    Toast.makeText(getParentActivity(), getString(R.string.DebugMenuLongPress), Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+                return;
+            }
+            presentFragment(new DebugSettingsActivity());
+        });
 
         navigationBar = new View(context);
 //        fragmentView.addView(navigationBar, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 0, Gravity.BOTTOM | Gravity.FILL_HORIZONTAL));
@@ -795,6 +805,14 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             items.add(SettingCell.Factory.of(24, 0xFFF45255, 0xFFDF3955, 0, getString(R.string.RoundVideoSettings)));
             items.add(SettingCell.Factory.of(26, 0xFF55CA47, 0xFF27B434, 0, getString(R.string.AudioRecorderSettings)));
             items.add(SettingCell.Factory.of(27, 0xFF3D8BEB, 0xFF2A6FD9, 0, getString(R.string.HeaderSettings)));
+        }
+
+        if (BuildVars.LOGS_ENABLED || BuildVars.DEBUG_PRIVATE_VERSION) {
+            items.add(UItem.asShadow(null));
+            items.add(UItem.asHeader(getString(R.string.SettingsDebug)));
+            items.add(SettingCell.Factory.of(20, 0xFF55CA47, 0xFF27B434, 0, getString(R.string.DebugSendLogs)));
+            items.add(SettingCell.Factory.of(21, 0xFF55CA47, 0xFF27B434, 0, getString(R.string.DebugSendLastLogs)));
+            items.add(SettingCell.Factory.of(22, 0xFFF45255, 0xFFDF3955, 0, getString(R.string.DebugClearLogs)));
         }
 
         items.add(UItem.asCustomShadow(versionView));

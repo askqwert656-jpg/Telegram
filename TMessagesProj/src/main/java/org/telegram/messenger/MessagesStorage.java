@@ -10175,6 +10175,51 @@ public class MessagesStorage extends BaseController {
         }
     }
 
+    public interface Folder42ConversationCallback {
+        void onLoaded(ArrayList<TLRPC.Message> messages, boolean hasUnloadedHistory);
+    }
+
+    public void getFolder42Conversation(long dialogId, Folder42ConversationCallback callback) {
+        storageQueue.postRunnable(() -> {
+            ArrayList<TLRPC.Message> result = new ArrayList<>();
+            boolean hasUnloadedHistory = false;
+            SQLiteCursor cursor = null;
+            try {
+                long currentUserId = getUserConfig().clientUserId;
+                cursor = database.queryFinalized(
+                        "SELECT data, mid, date, out FROM messages_v2 WHERE uid = ? ORDER BY date ASC, mid ASC",
+                        dialogId);
+                while (cursor.next()) {
+                    NativeByteBuffer data = cursor.byteBufferValue(0);
+                    if (data == null) continue;
+                    TLRPC.Message message = TLRPC.Message.TLdeserialize(data, data.readInt32(false), false);
+                    if (message != null) {
+                        message.id = cursor.intValue(1);
+                        message.date = cursor.intValue(2);
+                        message.out = cursor.intValue(3) != 0;
+                        message.dialog_id = dialogId;
+                        message.readAttachPath(data, currentUserId);
+                        result.add(message);
+                    }
+                    data.reuse();
+                }
+                cursor.dispose();
+                cursor = null;
+                cursor = database.queryFinalized("SELECT COUNT(*) FROM messages_holes WHERE uid = ?", dialogId);
+                hasUnloadedHistory = cursor.next() && cursor.intValue(0) > 0;
+            } catch (Exception e) {
+                FileLog.e(e);
+                hasUnloadedHistory = true;
+            } finally {
+                if (cursor != null) cursor.dispose();
+            }
+            final boolean incomplete = hasUnloadedHistory;
+            AndroidUtilities.runOnUIThread(() -> {
+                if (callback != null) callback.onLoaded(result, incomplete);
+            });
+        });
+    }
+
     public void getMessages(long dialogId, long mergeDialogId, boolean loadInfo, int count, int max_id, int offset_date, int minDate, int classGuid, int load_type, int mode, long replyMessageId, int loadIndex, boolean processMessages, boolean isTopic, Timer loaderLogger) {
         Timer.Task t1 = Timer.start(loaderLogger, "MessagesStorage.getMessages: storageQueue.postRunnable");
         storageQueue.postRunnable(() -> {

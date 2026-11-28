@@ -16,7 +16,7 @@ import androidx.room.PrimaryKey;
         childColumns = "chat_id",
         onDelete = ForeignKey.CASCADE
     ),
-    indices = {@Index(value = "chat_id"), @Index(value = {"chat_id", "message_id"}, unique = true)}
+    indices = {@Index(value = "chat_id")}
 )
 public class ArchivedMessageEntity {
     @PrimaryKey
@@ -50,9 +50,19 @@ public class ArchivedMessageEntity {
     @ColumnInfo(name = "media_metadata")
     public String mediaMetadata;
 
+    @ColumnInfo(name = "archive_type", defaultValue = "0")
+    public int archiveType;
+
+    @androidx.room.Ignore
     public ArchivedMessageEntity(@NonNull String recordId, @NonNull String chatId, long messageId,
                                  long senderId, @NonNull String text, long date, long editedAt,
                                  Long deletedAt, String mediaMetadata) {
+        this(recordId, chatId, messageId, senderId, text, date, editedAt, deletedAt, mediaMetadata, 0);
+    }
+
+    public ArchivedMessageEntity(@NonNull String recordId, @NonNull String chatId, long messageId,
+                                 long senderId, @NonNull String text, long date, long editedAt,
+                                 Long deletedAt, String mediaMetadata, int archiveType) {
         this.recordId = recordId;
         this.chatId = chatId;
         this.messageId = messageId;
@@ -62,5 +72,6 @@ public class ArchivedMessageEntity {
         this.editedAt = editedAt;
         this.deletedAt = deletedAt;
         this.mediaMetadata = mediaMetadata;
+        this.archiveType = archiveType;
     }
 }

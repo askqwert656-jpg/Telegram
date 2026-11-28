@@ -19,6 +19,7 @@ import com.example.tgarchive.database.MessageEditEntity;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
@@ -130,6 +131,14 @@ public class Folder42ChatActivity extends BaseFragment {
                         history.append("\n\nИзменено: ").append(DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(edit.editedAt))).append("\nБыло: ").append(edit.previousText).append("\nСтало: ").append(edit.newText);
                     }
                 }
+                if (message.archiveType == 1) {
+                    String author = message.senderId == UserConfig.getInstance(currentAccount).clientUserId ? "Вы" : "Собеседник";
+                    new AlertDialog.Builder(context).setTitle("Полная копия переписки")
+                            .setMessage("Отправитель: " + author + "\n\n" + (message.text == null ? "" : message.text))
+                            .setNeutralButton("Удалить из копии", (dialog, which) -> deleteArchivedMessage(message))
+                            .setPositiveButton("Закрыть", null).show();
+                    return;
+                }
                 if (message.deletedAt != null) history.append("\n\nСообщение удалено.");
                 new AlertDialog.Builder(context).setTitle("Досье сообщения").setMessage(history.toString())
                         .setNeutralButton("Удалить из архива", (dialog, which) -> deleteArchivedMessage(message))
@@ -178,7 +187,13 @@ public class Folder42ChatActivity extends BaseFragment {
             ArchivedMessageEntity message = messages.get(position);
             holder.body.setText(message.text == null || message.text.isEmpty() ? "Сообщение без текста" : message.text);
             String date = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(new Date(message.date * 1000L));
-            String state = message.deletedAt != null ? "  ·  УДАЛЕНО" : (message.editedAt > 0 ? "  ·  ИЗМЕНЕНО" : "");
+            String state;
+            if (message.archiveType == 1) {
+                String author = message.senderId == UserConfig.getInstance(currentAccount).clientUserId ? "ВЫ" : "СОБЕСЕДНИК";
+                state = "  ·  ПОЛНАЯ КОПИЯ · " + author;
+            } else {
+                state = message.deletedAt != null ? "  ·  УДАЛЕНО" : (message.editedAt > 0 ? "  ·  ИЗМЕНЕНО" : "");
+            }
             holder.meta.setText(date + state);
             holder.itemView.setOnClickListener(v -> showMessageHistory(message));
             holder.itemView.setOnLongClickListener(v -> {

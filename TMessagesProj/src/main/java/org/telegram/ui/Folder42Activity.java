@@ -186,11 +186,17 @@ public class Folder42Activity extends BaseFragment {
                 if (title.isEmpty()) title = "Чат " + chatId;
                 final String savedTitle = title;
                 final int savedType = chatType;
-                databaseExecutor.execute(() -> {
-                    Folder42Database.getInstance(getParentActivity()).folder42Dao().insertOrUpdateChat(
-                            new ArchivedChatEntity(chatId, savedTitle, savedType, 0, System.currentTimeMillis())
-                    );
-                    AndroidUtilities.runOnUIThread(this::loadChats);
+                MessagesStorage.getInstance(currentAccount).getFolder42Conversation(dialogId, (messages, hasUnloadedHistory) -> {
+                    Folder42ArchiveManager.saveFullConversation(currentAccount, dialogId, savedTitle, savedType, messages, () -> {
+                        loadChats();
+                        Context parent = getParentActivity();
+                        if (parent != null) {
+                            String result = hasUnloadedHistory
+                                    ? "Сохранено " + messages.size() + " сообщений. Часть истории ещё не загружена Telegram."
+                                    : "Сохранена полная копия: " + messages.size() + " сообщений.";
+                            Toast.makeText(parent, result, Toast.LENGTH_LONG).show();
+                        }
+                    });
                 });
             }
             fragment.finishFragment();

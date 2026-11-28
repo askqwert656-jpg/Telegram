@@ -15,7 +15,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
  */
 @Database(
     entities = {ArchivedChatEntity.class, ArchivedMessageEntity.class, MessageEditEntity.class},
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 public abstract class Folder42Database extends RoomDatabase {
@@ -23,6 +23,13 @@ public abstract class Folder42Database extends RoomDatabase {
         @Override
         public void migrate(SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE folder42_chats ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1");
+        }
+    };
+    private static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE folder42_messages ADD COLUMN archive_type INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("DROP INDEX IF EXISTS index_folder42_messages_chat_id_message_id");
         }
     };
     private static volatile Folder42Database INSTANCE;
@@ -39,7 +46,7 @@ public abstract class Folder42Database extends RoomDatabase {
                         context.getApplicationContext(),
                         Folder42Database.class,
                         "potuzhnogram_folder_42.db"
-                    ).addMigrations(MIGRATION_1_2).build();
+                    ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build();
                     INSTANCE = instance;
                 }
             }

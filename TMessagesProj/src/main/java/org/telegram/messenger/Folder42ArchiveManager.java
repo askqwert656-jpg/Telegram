@@ -7,6 +7,8 @@ import com.example.tgarchive.database.ArchivedMessageEntity;
 import com.example.tgarchive.database.Folder42Database;
 import com.example.tgarchive.database.MessageEditEntity;
 
+import org.telegram.tgnet.TLRPC;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -36,6 +38,9 @@ public final class Folder42ArchiveManager {
         executor.execute(() -> {
             Folder42Database db = Folder42Database.getInstance(context.getApplicationContext());
             db.runInTransaction(() -> {
+                long ownUserId = UserConfig.getInstance(UserConfig.selectedAccount).clientUserId;
+                db.folder42Dao().removeEditsFromSender(ownUserId);
+                db.folder42Dao().removeMessagesFromSender(ownUserId);
                 db.folder42Dao().deleteEditsBefore(cutoff);
                 db.folder42Dao().deleteMessagesBefore(cutoff);
             });
@@ -43,6 +48,9 @@ public final class Folder42ArchiveManager {
     }
 
     private static void cleanupExpiredMessagesNow(Folder42Database db) {
+        long ownUserId = UserConfig.getInstance(UserConfig.selectedAccount).clientUserId;
+        db.folder42Dao().removeEditsFromSender(ownUserId);
+        db.folder42Dao().removeMessagesFromSender(ownUserId);
         int days = ApplicationLoader.applicationContext.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE).getInt(KEY_RETENTION_DAYS, 0);
         if (days <= 0) return;
         long cutoff = System.currentTimeMillis() / 1000L - days * 86400L;
@@ -53,7 +61,8 @@ public final class Folder42ArchiveManager {
 
     public static void saveMessage(long dialogId, String chatTitle, int chatType,
                                    long messageId, long senderId, String text, long date, String mediaMetadata) {
-        if (dialogId == 0 || messageId == 0 || ApplicationLoader.applicationContext == null) {
+        if (dialogId == 0 || messageId == 0 || ApplicationLoader.applicationContext == null ||
+                senderId == UserConfig.getInstance(UserConfig.selectedAccount).clientUserId) {
             return;
         }
         final String chatId = String.valueOf(dialogId);
@@ -69,6 +78,44 @@ public final class Folder42ArchiveManager {
                         chatId + ":" + messageId, chatId, messageId, senderId, safeText,
                         date, 0, null, mediaMetadata));
             });
+        });
+    }
+
+    public static void saveFullConversation(int account, long dialogId, String chatTitle, int chatType,
+                                            java.util.ArrayList<TLRPC.Message> messages, Runnable completion) {
+        if (dialogId == 0 || messages == null || ApplicationLoader.applicationContext == null) {
+            if (completion != null) AndroidUtilities.runOnUIThread(completion);
+            return;
+        }
+        final String chatId = String.valueOf(dialogId);
+        final String safeTitle = TextUtils.isEmpty(chatTitle) ? "Переписка " + chatId : chatTitle;
+        final long ownUserId = UserConfig.getInstance(account).clientUserId;
+        executor.execute(() -> {
+            Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
+            db.runInTransaction(() -> {
+                long now = System.currentTimeMillis();
+                db.folder42Dao().insertOrUpdateChat(new ArchivedChatEntity(
+                        chatId, safeTitle, chatType, now, now, true));
+                for (TLRPC.Message message : messages) {
+                    if (message == null || message.id == 0) continue;
+                    ArchivedMessageEntity eventRecord = db.folder42Dao().getMessage(chatId, message.id);
+                    if (eventRecord != null) continue;
+                    long senderId = ownUserId;
+                    if (message.from_id != null) {
+                        if (message.from_id.user_id != 0) senderId = message.from_id.user_id;
+                        else if (message.from_id.channel_id != 0) senderId = -message.from_id.channel_id;
+                        else if (message.from_id.chat_id != 0) senderId = -message.from_id.chat_id;
+                    } else if (!message.out && dialogId > 0) {
+                        senderId = dialogId;
+                    }
+                    String body = message.message == null ? "" : message.message;
+                    String media = message.media == null ? null : message.media.getClass().getSimpleName();
+                    db.folder42Dao().insertMessage(new ArchivedMessageEntity(
+                            "full:" + chatId + ":" + message.id, chatId, message.id, senderId,
+                            body, message.date, 0, null, media, 1));
+                }
+            });
+            if (completion != null) AndroidUtilities.runOnUIThread(completion);
         });
     }
 
@@ -88,7 +135,8 @@ public final class Folder42ArchiveManager {
                 ArchivedMessageEntity previous = db.folder42Dao().getMessage(chatId, messageId);
                 // Without a pre-edit copy we cannot identify the author reliably.
                 // Never create a speculative record for an unknown sender.
-                if (previous == null) {
+                if (previous == null || previous.archiveType != 0 ||
+                        previous.senderId == UserConfig.getInstance(UserConfig.selectedAccount).clientUserId) {
                     return;
                 }
                 if (TextUtils.equals(previous.text, safeText)) {
@@ -139,7 +187,8 @@ public final class Folder42ArchiveManager {
             Folder42Database db = Folder42Database.getInstance(ApplicationLoader.applicationContext);
             cleanupExpiredMessagesNow(db);
             ArchivedMessageEntity existing = db.folder42Dao().getMessage(chatId, messageId);
-            if (existing == null || existing.deletedAt != null) {
+            if (existing == null || existing.archiveType != 0 || existing.deletedAt != null ||
+                    existing.senderId == UserConfig.getInstance(UserConfig.selectedAccount).clientUserId) {
                 return;
             }
             long eventTime = deletedAt > 0 ? deletedAt : System.currentTimeMillis();

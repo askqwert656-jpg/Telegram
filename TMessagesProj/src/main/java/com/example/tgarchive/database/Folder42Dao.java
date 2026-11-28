@@ -31,19 +31,19 @@ public interface Folder42Dao {
     @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId ORDER BY date DESC")
     List<ArchivedMessageEntity> getMessages(String chatId);
 
-    @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId AND message_id = :messageId LIMIT 1")
+    @Query("SELECT * FROM folder42_messages WHERE chat_id = :chatId AND message_id = :messageId AND archive_type = 0 LIMIT 1")
     ArchivedMessageEntity getMessage(String chatId, long messageId);
 
-    @Query("SELECT * FROM folder42_messages WHERE message_id = :messageId")
+    @Query("SELECT * FROM folder42_messages WHERE message_id = :messageId AND archive_type = 0")
     List<ArchivedMessageEntity> getMessagesByMessageId(long messageId);
 
     @Query("UPDATE folder42_chats SET is_active = 1, title = :title, chat_type = :chatType, last_synced_at = :updatedAt WHERE chat_id = :chatId")
     int activateChat(String chatId, String title, int chatType, long updatedAt);
 
-    @Query("UPDATE folder42_messages SET text = :text, edited_at = :editedAt WHERE chat_id = :chatId AND message_id = :messageId")
+    @Query("UPDATE folder42_messages SET text = :text, edited_at = :editedAt WHERE chat_id = :chatId AND message_id = :messageId AND archive_type = 0")
     int updateMessageText(String chatId, long messageId, String text, long editedAt);
 
-    @Query("UPDATE folder42_messages SET deleted_at = :deletedAt WHERE chat_id = :chatId AND message_id = :messageId")
+    @Query("UPDATE folder42_messages SET deleted_at = :deletedAt WHERE chat_id = :chatId AND message_id = :messageId AND archive_type = 0")
     int markMessageDeleted(String chatId, long messageId, long deletedAt);
 
     @Query("DELETE FROM folder42_message_edits WHERE message_record_id IN (SELECT record_id FROM folder42_messages WHERE date < :cutoff)")
@@ -55,10 +55,10 @@ public interface Folder42Dao {
     @Query("SELECT * FROM folder42_message_edits WHERE message_record_id = :messageRecordId ORDER BY edited_at ASC")
     List<MessageEditEntity> getEdits(String messageRecordId);
 
-    @Query("DELETE FROM folder42_message_edits WHERE message_record_id IN (SELECT record_id FROM folder42_messages WHERE sender_id = :senderId)")
+    @Query("DELETE FROM folder42_message_edits WHERE message_record_id IN (SELECT record_id FROM folder42_messages WHERE sender_id = :senderId AND archive_type = 0)")
     int removeEditsFromSender(long senderId);
 
-    @Query("DELETE FROM folder42_messages WHERE sender_id = :senderId")
+    @Query("DELETE FROM folder42_messages WHERE sender_id = :senderId AND archive_type = 0")
     int removeMessagesFromSender(long senderId);
 
     @Query("DELETE FROM folder42_message_edits WHERE message_record_id = :recordId")
