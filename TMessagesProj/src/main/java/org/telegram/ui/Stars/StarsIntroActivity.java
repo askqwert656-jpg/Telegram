@@ -218,7 +218,9 @@ public class StarsIntroActivity extends GradientHeaderActivity implements Notifi
     private TextView giftStatsTextView;
 
     public StarsIntroActivity() {
-        this(false);
+        // PotuzhnoGram keeps Stars and Gifts as a balance/history/gifting area;
+        // purchasing or topping up Stars is intentionally not exposed in this screen.
+        this(true);
     }
 
     public StarsIntroActivity(boolean readOnlyMode) {
